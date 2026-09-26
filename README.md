@@ -17,7 +17,27 @@ Attention Today
 
 **Solution:** select a case and call `POST /api/analyze` with `{ "case_id": "acme-sso-rollout" }`. The service returns one validated decision: `VERIFY`, `SUPPRESS`, or `ABSTAIN`, with reason, recommended action, suggested owner, due hint, flat evidence records, `contradictions_checked` challenge results, and missing evidence. See [API contract](docs/api-contract.md).
 
-**Architecture:** a small frontend calls one backend endpoint. The backend reads four local synthetic JSON datasets for the selected case and produces an explainable decision. See [architecture](docs/architecture.md), [API contract](docs/api-contract.md), and [demo flow](docs/demo-flow.md).
+**Architecture:** the frontend calls the decision and action API. The backend reads synthetic JSON fixtures for the selected case and produces an explainable decision. See [architecture](docs/architecture.md), the [Canon](docs/MULANOUS_LITE_CANON.md), and [demo flow](docs/demo-flow.md).
+
+## Run locally
+
+Leave `MONGODB_URI` empty so the API uses in-memory fixtures.
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://127.0.0.1:41731`. The UI reads `NEXT_PUBLIC_API_BASE_URL` (default `http://127.0.0.1:8000`). See [frontend/README.md](frontend/README.md) and [backend/README.md](backend/README.md).
 
 **Challenge disclosure:** this prototype is being built during BPF 2026. All checked-in enterprise inputs are synthetic. AI tools are used to help plan, write, and review the prototype. No private Mulanous source code or customer data belongs in this public repository.
 
@@ -26,7 +46,7 @@ Attention Today
 ```text
 backend/   Python FastAPI decision and action API
 ingest/    Go fixture ingest into MongoDB Atlas (no connector admin)
-frontend/  UI owned by Syam; can start from frontend/mock-analysis.json
+frontend/  Attention Today and Case Brief, calling the API
 data/      synthetic CRM, Jira, Slack, and meeting records
 docs/      product freeze, architecture, demo flow, and API contract
 ```

@@ -1,3 +1,25 @@
+# Frontend
+
+Two screens, wired to the live API:
+
+```text
+Attention Today
+→ Case Brief
+    ├── Evidence Inspector
+    ├── Investigate drawer
+    └── Take Action drawer
+```
+
+`NEXT_PUBLIC_API_BASE_URL` defaults to `http://127.0.0.1:8000`. Copy [`.env.example`](.env.example) if the API is elsewhere.
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The dev server listens on `http://127.0.0.1:41731`. Start the API first. See [backend/README.md](../backend/README.md). With `MONGODB_URI` empty, the API serves the checked-in synthetic fixtures.
+
 # Frontend handoff
 
 Syam owns the UI. Build the locked path:
