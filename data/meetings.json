@@ -1,0 +1,9 @@
+[
+  {
+    "id": "MEETING-301",
+    "account_id": "acme-001",
+    "title": "Acme weekly check-in",
+    "text": "Customer confirmed the export timeout is resolved. SSO mapping remains open.",
+    "observed_at": "2026-09-25T16:00:00Z"
+  }
+]

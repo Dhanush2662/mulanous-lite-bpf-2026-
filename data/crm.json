@@ -1,0 +1,10 @@
+[
+  {
+    "id": "CRM-001",
+    "account_id": "acme-001",
+    "account_name": "Acme Systems",
+    "title": "Q3 account risk note",
+    "text": "SSO rollout remains at risk while SAML role mapping is unresolved.",
+    "observed_at": "2026-09-24T09:00:00Z"
+  }
+]

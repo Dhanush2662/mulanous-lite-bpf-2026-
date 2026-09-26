@@ -1,0 +1,18 @@
+[
+  {
+    "id": "JIRA-101",
+    "account_id": "acme-001",
+    "title": "SSO rollout blocked by SAML mapping",
+    "text": "The customer cannot complete SSO rollout until role mapping is corrected.",
+    "status": "open",
+    "observed_at": "2026-09-25T10:00:00Z"
+  },
+  {
+    "id": "JIRA-102",
+    "account_id": "acme-001",
+    "title": "Export timeout",
+    "text": "The export timeout was fixed and verified with the customer.",
+    "status": "resolved",
+    "observed_at": "2026-09-23T15:00:00Z"
+  }
+]

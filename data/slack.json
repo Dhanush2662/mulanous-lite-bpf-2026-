@@ -1,0 +1,9 @@
+[
+  {
+    "id": "SLACK-201",
+    "account_id": "acme-001",
+    "title": "Acme rollout update",
+    "text": "Acme SSO is still blocked on SAML mapping. Platform team is investigating.",
+    "observed_at": "2026-09-25T13:30:00Z"
+  }
+]

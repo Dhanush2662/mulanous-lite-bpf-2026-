@@ -1,0 +1,15 @@
+{
+  "account_id": "acme-001",
+  "claim": "The SSO rollout is blocked for Acme.",
+  "decision": "VERIFY",
+  "reason": "Recent source records show an unresolved SSO rollout blocker.",
+  "evidence": [
+    {
+      "source": "jira",
+      "id": "JIRA-101",
+      "title": "SSO rollout blocked by SAML mapping",
+      "url": null,
+      "observed_at": "2026-09-25T10:00:00Z"
+    }
+  ]
+}
