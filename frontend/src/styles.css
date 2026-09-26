@@ -59,8 +59,7 @@ a {
 .topbar {
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--border);
-  padding: 18px 32px;
+  padding: 22px 32px 0;
 }
 
 .brand,
@@ -113,21 +112,17 @@ a {
 
 h1 {
   margin: 0;
-  font-size: 44px;
+  font-size: 52px;
   font-weight: 500;
-  letter-spacing: -0.03em;
-  line-height: 1.08;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
 }
 
 .attention-head {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 24px;
-}
-
-.attention-head h1 {
-  max-width: 14ch;
 }
 
 .systems {
@@ -180,16 +175,16 @@ h1 {
 
 .queue-section li {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 24px;
   border-bottom: 1px solid var(--border);
-  padding: 18px 0 18px 14px;
+  padding: 18px 0 18px 16px;
 }
 
 .queue-section li.is-lead {
   border-left: 2px solid var(--gold);
-  padding-left: 12px;
+  padding-left: 14px;
 }
 
 .queue-section li.is-quiet {
@@ -365,8 +360,8 @@ h1 {
   position: sticky;
   top: 16px;
   border: 1px solid var(--border);
-  background: var(--surface);
-  padding: 18px;
+  background: var(--surface-2);
+  padding: 18px 18px 22px;
 }
 
 .inspector h2 {
@@ -462,9 +457,10 @@ h1 {
 .hero h2 {
   margin: 0;
   font-family: var(--mono);
-  font-size: 40px;
+  font-size: 64px;
   font-weight: 400;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+  line-height: 1;
 }
 
 .hero.verify {
@@ -628,11 +624,12 @@ h1 {
   top: 0;
   right: 0;
   display: flex;
-  width: min(45vw, 640px);
+  width: min(44vw, 560px);
+  min-width: 360px;
   height: 100%;
   flex-direction: column;
   border-left: 1px solid var(--border);
-  background: var(--surface);
+  background: #0b0b0c;
 }
 
 .drawer-head {
@@ -698,11 +695,19 @@ h1 {
 .plan-steps .tool,
 .result-list .tool,
 .complete-mark {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
   color: var(--gold);
 }
 
 .step-no {
-  margin-right: 8px;
+  min-width: 1.6em;
+}
+
+.approve-button,
+.cancel-button {
+  width: 100%;
 }
 
 .plan-steps dl {

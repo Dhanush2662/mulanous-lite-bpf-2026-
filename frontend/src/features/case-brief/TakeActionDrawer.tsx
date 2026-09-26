@@ -8,13 +8,6 @@ import { SyntheticStateView } from "./SyntheticStateView"
 
 type Phase = "planning" | "review" | "executing" | "complete"
 
-const PHASES: { id: Phase; label: string }[] = [
-  { id: "planning", label: "Planning" },
-  { id: "review", label: "Review" },
-  { id: "executing", label: "Executing" },
-  { id: "complete", label: "Complete" },
-]
-
 export function TakeActionDrawer({
   caseId,
   onClose,
@@ -83,18 +76,8 @@ export function TakeActionDrawer({
     }
   }
 
-  const phaseIndex = PHASES.findIndex((item) => item.id === phase)
-
   return (
     <Drawer title="TAKE ACTION" onClose={onClose}>
-      <ol className="stepper" aria-label="Action progress">
-        {PHASES.map((item, index) => (
-          <li key={item.id} className={index <= phaseIndex ? "reached" : ""}>
-            {item.label}
-          </li>
-        ))}
-      </ol>
-
       {phase === "planning" ? (
         <p className="status-copy" role="status">
           Planning
@@ -129,7 +112,6 @@ export function TakeActionDrawer({
             source={planSource}
             text="Local fallback. The decision service did not return this plan."
           />
-          <p className="mono plan-id">{plan.plan_id}</p>
           <ol className="plan-steps">
             {plan.steps.map((step, index) => (
               <li key={`${step.tool}-${step.summary}`}>
