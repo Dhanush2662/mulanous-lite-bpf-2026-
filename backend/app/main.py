@@ -24,13 +24,22 @@ logger = get_logger(__name__)
 def create_app(
     provider: DecisionProvider | None = None,
     data_dir: Path | None = None,
+    *,
+    use_atlas: bool | None = None,
+    force_fake_embeddings: bool = False,
 ) -> FastAPI:
     configure_logging()
     repo_root = Path(__file__).resolve().parents[2]
     if provider is None:
         load_local_env(repo_root)
         provider = build_provider()
-    runtime = Runtime(data_dir or (repo_root / "data"), provider)
+    runtime = Runtime(
+        data_dir or (repo_root / "data"),
+        provider,
+        repo_root / "domain_packs",
+        use_atlas=use_atlas,
+        force_fake_embeddings=force_fake_embeddings,
+    )
     app = FastAPI(title="Mulanous Lite", version="0.1.0")
     app.state.runtime = runtime
     _add_middleware(app)

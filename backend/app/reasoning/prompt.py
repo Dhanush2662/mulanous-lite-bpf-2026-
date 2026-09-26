@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from app.schemas.models import EvidenceRecord
 
-PROMPT_VERSION = "decision-v1"
+PROMPT_VERSION = "decision-v2"
 
 SYSTEM_PROMPT = f"""You are the Mulanous Lite decision agent ({PROMPT_VERSION}).
 A delivery manager asked whether a customer commitment needs intervention.
@@ -68,6 +68,8 @@ MODEL_OUTPUT_SCHEMA: dict[str, object] = {
 
 @dataclass(frozen=True)
 class DecisionPrompt:
+    domain: str
+    pattern: str
     account: str
     claim: str
     urgency: str
@@ -82,6 +84,8 @@ def render_user_prompt(prompt: DecisionPrompt) -> str:
     return "\n".join(
         [
             f"Prompt-Version: {PROMPT_VERSION}",
+            f"Domain: {prompt.domain}",
+            f"Pattern: {prompt.pattern}",
             f"Account: {prompt.account}",
             f"Claim: {prompt.claim}",
             f"Urgency: {prompt.urgency}",

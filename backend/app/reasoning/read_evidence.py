@@ -26,6 +26,10 @@ OPEN_PHRASES = (
     "no resolution",
     "not shipped",
     "remains blocked",
+    "material shortage",
+    "quality hold",
+    "throughput drop",
+    "cannot meet",
 )
 RESOLVED_PHRASES = (
     "resolved",
@@ -61,6 +65,9 @@ _STRONG_OPEN = (
     "no resolution",
     "blocker",
     "blocked by",
+    "material shortage",
+    "quality hold",
+    "throughput drop",
 )
 
 

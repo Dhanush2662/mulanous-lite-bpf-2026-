@@ -1,12 +1,11 @@
-"""Build a stored plan from a validated decision. Planning does not execute."""
+"""Build a stored plan from a validated decision. The planner does not execute."""
 
 from __future__ import annotations
 
 import uuid
 
+from app.actions.policy import requires_approval
 from app.schemas.models import ActionPlan, ActionStep, AnalyzeResponse, Case, SyntheticState
-
-_ALLOWED = {"create_task", "send_message", "update_account_risk"}
 
 
 def build_action_plan(
@@ -15,27 +14,26 @@ def build_action_plan(
     before_state: SyntheticState,
 ) -> ActionPlan:
     steps = _steps_for(analysis, case)
-    for step in steps:
-        if step.tool not in _ALLOWED:
-            raise ValueError(f"unsupported tool: {step.tool}")
     return ActionPlan(
         plan_id=f"plan-{uuid.uuid4().hex[:12]}",
         case_id=case.id,
         steps=steps,
-        requires_approval=True,
+        requires_approval=requires_approval(steps),
         before_state=before_state,
     )
 
 
 def _steps_for(analysis: AnalyzeResponse, case: Case) -> list[ActionStep]:
     if analysis.decision == "SUPPRESS":
-        return []
+        return [_dismiss(case)]
     if analysis.decision == "ABSTAIN":
-        return _clarify_steps(analysis, case)
-    return _intervention_steps(analysis, case)
+        return [_request_evidence(analysis, case)]
+    if case.domain == "manufacturing":
+        return _manufacturing_steps(analysis, case)
+    return _software_steps(analysis, case)
 
 
-def _intervention_steps(analysis: AnalyzeResponse, case: Case) -> list[ActionStep]:
+def _software_steps(analysis: AnalyzeResponse, case: Case) -> list[ActionStep]:
     return [
         ActionStep(
             tool="create_task",
@@ -68,29 +66,64 @@ def _intervention_steps(analysis: AnalyzeResponse, case: Case) -> list[ActionSte
     ]
 
 
-def _clarify_steps(analysis: AnalyzeResponse, case: Case) -> list[ActionStep]:
-    gaps = "; ".join(analysis.missing_evidence) or "Required evidence is missing."
+def _manufacturing_steps(analysis: AnalyzeResponse, case: Case) -> list[ActionStep]:
     return [
         ActionStep(
-            tool="create_task",
-            summary="Create a task to gather the missing evidence.",
+            tool="expedite_material",
+            summary="Expedite the short material for the committed order.",
             args={
-                "title": "Gather missing evidence before any intervention",
-                "owner": analysis.suggested_owner,
-                "detail": gaps,
+                "material": _material(analysis),
+                "detail": analysis.reason,
                 "case_id": case.id,
             },
         ),
         ActionStep(
-            tool="send_message",
-            summary="Ask for clarification. Do not treat the commitment as verified.",
+            tool="notify_planner",
+            summary=f"Notify {analysis.suggested_owner} about the production commitment.",
             args={
                 "recipient": analysis.suggested_owner,
-                "body": (
-                    "Please clarify before any intervention. "
-                    f"Do not treat this commitment as verified. Missing: {gaps}"
-                ),
+                "body": analysis.recommended_action,
+                "case_id": case.id,
+            },
+        ),
+        ActionStep(
+            tool="update_order_risk",
+            summary="Record that the committed order is at risk.",
+            args={
+                "order_id": _order_id(analysis),
+                "risk_note": analysis.reason,
                 "case_id": case.id,
             },
         ),
     ]
+
+
+def _dismiss(case: Case) -> ActionStep:
+    return ActionStep(
+        tool="dismiss_resolved",
+        summary="Dismiss the resolved case from the attention queue.",
+        args={"case_id": case.id, "note": "Evidence shows the issue is already resolved."},
+    )
+
+
+def _request_evidence(analysis: AnalyzeResponse, case: Case) -> ActionStep:
+    gaps = "; ".join(analysis.missing_evidence) or "Required evidence is missing."
+    return ActionStep(
+        tool="request_evidence",
+        summary="Request the missing evidence. Do not treat the commitment as verified.",
+        args={"case_id": case.id, "detail": gaps},
+    )
+
+
+def _order_id(analysis: AnalyzeResponse) -> str:
+    for record in analysis.evidence:
+        if record.source == "erp":
+            return record.source_record_id
+    return "unknown-order"
+
+
+def _material(analysis: AnalyzeResponse) -> str:
+    for record in analysis.evidence:
+        if record.source == "inventory":
+            return record.title[:120]
+    return "short material"

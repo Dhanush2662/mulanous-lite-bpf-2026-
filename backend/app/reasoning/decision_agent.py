@@ -39,6 +39,8 @@ class DecisionAgent:
 
     def _prompt(self, context: AssembledContext) -> DecisionPrompt:
         return DecisionPrompt(
+            domain=context.domain,
+            pattern=context.pattern,
             account=context.account,
             claim=context.claim,
             urgency=context.urgency,

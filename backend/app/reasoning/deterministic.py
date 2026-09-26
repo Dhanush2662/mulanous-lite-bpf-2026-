@@ -42,12 +42,18 @@ def _verify(relevant: list[EvidenceRecord], open_records: list[EvidenceRecord]) 
             "Confirm the unresolved blocker with the delivery owner and track it "
             "before the customer checkpoint."
         )
+    elif "monday" in blob and ("material shortage" in blob or "quality hold" in blob):
+        due_hint = "Before Monday"
+        action = (
+            "Confirm the material shortage and quality hold with the production planner before Monday."
+        )
     else:
         due_hint = "Before the next customer commitment review"
         action = (
             "Confirm the unresolved blocker with the delivery owner and track it "
             "before the next commitment review."
         )
+    owner = "Production planner" if "production planner" in blob else "Delivery owner"
     open_ids = [record.id for record in open_records[:4]]
     return ModelDecision(
         decision="VERIFY",
@@ -56,7 +62,7 @@ def _verify(relevant: list[EvidenceRecord], open_records: list[EvidenceRecord]) 
             "The hypothesis that this is already resolved is not supported."
         ),
         recommended_action=action,
-        suggested_owner="Delivery owner",
+        suggested_owner=owner,
         due_hint=due_hint,
         evidence_ids=[record.id for record in relevant],
         contradictions_checked=[
