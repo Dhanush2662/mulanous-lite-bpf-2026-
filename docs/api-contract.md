@@ -36,7 +36,7 @@ interface EvidenceRecord {
   source_record_id: string;
   title: string;
   body: string;
-  observed_at: string;
+  observed_at: string | null;
 }
 
 interface ChallengeResult {
@@ -46,7 +46,7 @@ interface ChallengeResult {
 }
 ```
 
-`EvidenceRecord.id` is `{source}:{source_record_id}`, for example `jira:JIRA-101`. `observed_at` is UTC ISO 8601. Provenance sits on these fields. Evidence items are flat records.
+`EvidenceRecord.id` is `{source}:{source_record_id}`, for example `jira:JIRA-101`. `observed_at` is a UTC ISO 8601 timestamp, or `null` when the source record has no timestamp. Provenance sits on these fields. Evidence items are flat records.
 
 `contradictions_checked` is `ChallengeResult[]`. Every `evidence_id` must equal an `evidence[].id` in the same response. A response that cites an unknown evidence id is invalid.
 
