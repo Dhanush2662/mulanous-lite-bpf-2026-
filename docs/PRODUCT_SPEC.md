@@ -1,5 +1,7 @@
 # Mulanous Lite — Product Spec
 
+**Authority:** If this spec conflicts with [MULANOUS_LITE_CANON.md](MULANOUS_LITE_CANON.md), the Canon wins. Material product or architecture changes update the Canon first.
+
 **Status:** FROZEN for BPF 2026 Day 1 (Builders' Pitch Fest)  
 **Freeze target:** working demo by 4:30 PM IST; portal cutoff follows event schedule.
 
