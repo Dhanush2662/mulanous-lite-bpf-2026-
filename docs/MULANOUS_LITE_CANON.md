@@ -19,9 +19,9 @@ Mulanous Lite is a challenge-built abstraction. It is not intended to become a s
 | Primary user | Delivery / Operations Manager |
 | Primary question | "What needs my attention today, why, and what should I do about it?" |
 
-**Problem.** Operational evidence is fragmented across CRM, delivery systems, communication, and meetings. Managers reconstruct that context by hand before they can decide whether a commitment needs intervention, is already resolved, is insufficiently evidenced, or needs a specific next action.
+**Problem.** Operational evidence is fragmented. Some of it is exact structured state (ticket status, order quantity, commitment date, inventory quantity, owner). Some of it is unstructured context (Slack, meeting notes, descriptions, escalations, operational comments). Managers reconstruct both by hand before they can decide whether a commitment needs intervention, is already resolved, is insufficiently evidenced, or needs a specific next action.
 
-**Out of scope.** Enterprise search, RAG-only question answering, document summarization, a generic chatbot, and an analytics dashboard. Also out of scope: a connectors admin, a workflow builder, a settings or auth product, and a separate UI per industry.
+**Out of scope.** Enterprise search, RAG-only question answering, document summarization, a generic chatbot, and an analytics dashboard. Also out of scope: a connectors admin, a connector settings or OAuth product, a workflow builder, a settings or auth product, and a separate UI per industry. Source adapters and evidence provenance are in scope. An optional one-line sources strip is in scope. Connector management is not.
 
 ---
 
@@ -41,23 +41,21 @@ The demo must prove three behaviors with the same engine:
 
 `VERIFY`, `SUPPRESS`, and `ABSTAIN` are the only terminal analysis states. There is no confidence percentage and no risk score.
 
-P0 runs attention, context, challenge, decision, action plan, human approval, and synthetic execute. Challenge in P0 is the contradiction check inside the decision pipeline. The user-driven Investigate drawer is the P1 expression of the INVESTIGATE stage. It is not a third page, and P0 does not wait on it.
+P0 runs attention, context, challenge, decision, action plan, and synthetic execute for two domains on one engine. Challenge in P0 is the contradiction check inside the decision pipeline. The user-driven Investigate drawer is the P1 expression of the INVESTIGATE stage. It is not a third page, and P0 does not wait on it.
+
+Low-risk internal actions may complete under an explicit policy without a second approval click. State-changing and external actions still stop at human approval. The loop above is the state-changing path.
 
 ---
 
 ## 3. Primary use case and cross-industry proof
 
-**P0 judged wedge.** Enterprise Delivery / Operations → Customer Commitment Intervention.
-
-Software / SaaS fixtures only: CRM, Jira, Slack, and meetings. All of them are synthetic.
-
-**Same engine, same UI.** Industry proof is a domain pack, not a new product and not a new frontend.
+**Two P0 demo domains. Same engine, same UI.** A case declares `domain` and `pattern`. Those two fields select the pack. The core does not branch on `case_id` and does not grow an industry-specific screen.
 
 | Priority | Pack | Pattern | Synthetic sources | Gate |
 | --- | --- | --- | --- | --- |
-| P0 | `software` | `customer_commitment_intervention` | CRM, Jira, Slack, meetings | Required demo |
-| P1 | `manufacturing` | `production_commitment_risk` | ERP/order, production schedule, inventory/material, quality notes | Required only after P0 is stable |
-| P1.5 | `logistics` | `delivery_commitment_risk` | TMS, carrier, ETA, SLA | Optional, and only if it fits in the remaining time (about 20 minutes) without risking P0 |
+| P0-A | `software` | `customer_commitment_intervention` | CRM, Jira, Slack, meetings | Full Decision + Action demo |
+| P0-B | `manufacturing` | `production_commitment_intervention` | ERP/order, production schedule, inventory/material, quality/ops notes | Same core, same Attention Today and Case Brief. Compressed cross-industry proof. |
+| P1.5 | `logistics` | `delivery_commitment_risk` | TMS, carrier, ETA, SLA | Optional, and only if it fits in the remaining time (about 20 minutes) without risking P0-A or P0-B |
 
 Pack layout:
 
@@ -67,11 +65,11 @@ domain_packs/manufacturing/
 domain_packs/logistics/
 ```
 
-Core stays assemble, reason, validate, investigate, and actions. A case declares `domain` and `pattern`. The core does not grow industry-specific screens.
+Core stays assemble, reason, validate, investigate, and actions. Packs supply fixtures, the pattern, and action-tool definitions.
 
-Do not delay P0 for industry packs. Do not build real SAP, MES, or TMS connectors. Do not build a domain-specific frontend.
+Do not build real SAP, MES, or TMS connectors. Do not build a domain-specific frontend. Do not build a connectors admin.
 
-Checked-in software fixtures may stay in `data/` until a move into `domain_packs/software/` is cheap. That move must not block P0. New manufacturing and logistics fixtures belong under their pack directories.
+Checked-in software fixtures may stay in `data/` until a move into `domain_packs/software/` is cheap. That move must not block P0. Manufacturing fixtures belong under `domain_packs/manufacturing/`. Logistics fixtures, if any, belong under their pack directory.
 
 ---
 
@@ -88,7 +86,9 @@ Case Brief
       └── Take Action drawer   (embedded)
 ```
 
-No third page. Cut settings, admin, connectors, analytics, a chatbot page, a workflow builder, and auth complexity. No sidebar.
+No third page. Cut settings, admin, connectors, analytics, a chatbot page, a workflow builder, and auth complexity. No sidebar. No connectors management UI and no OAuth connector product.
+
+An optional one-line sources strip may name the sources already on the case. It is provenance, not a connector admin.
 
 ### Attention Today
 
@@ -122,7 +122,7 @@ Evidence opens in the Evidence Inspector on this page. Investigation opens in a 
 
 ### Advisory boundary
 
-Mulanous Lite recommends a decision and a plan. A human must approve before any state-changing tool runs. Execution touches synthetic tools only. The product does not write to live CRM, Jira, Slack, SAP, MES, TMS, or any other production system, and it does not contact a real customer.
+Mulanous Lite recommends a decision and a plan. A human must approve before any state-changing or external tool runs. Low-risk internal tools may run under policy. Execution touches synthetic tools only. The product does not write to live CRM, Jira, Slack, SAP, MES, TMS, or any other production system, and it does not contact a real customer.
 
 ---
 
@@ -177,14 +177,16 @@ The model must not:
 
 Code, not the model, must:
 
-- load the case and the pack fixtures
-- assemble context only from those records
+- load the case by id, then retrieve evidence for that case's `domain` and account
+- use hybrid retrieval: deterministic structured lookup for exact facts, and vector search only for semantic text
+- refuse to decide ticket state, order quantity, commitment date, inventory quantity, ids, owner, or status by vector similarity
+- assemble context only from records that retrieval returned for that case
 - schema-validate model output
 - resolve every evidence reference to a real record for that case
 - reject unresolved references
 - retry a safe validation failure, or return `ABSTAIN` / a controlled error
 - refuse to coerce malformed model output into a decision
-- keep action execution behind the approval gate
+- keep state-changing action execution behind the approval gate
 
 Prompts are versioned, explicit, grounded in the supplied evidence, and constrained to schema output.
 
@@ -211,13 +213,21 @@ The Investigation Agent has no write tools and no path to live systems.
 
 ## 9. Action Agent
 
-Sequence for every state-changing tool:
+State-changing and external tools use:
 
 ```text
 PLAN → SHOW → APPROVE → EXECUTE → RESULT
 ```
 
 The plan is shown in the Take Action drawer before anything runs. Approval is an explicit human action. Execute applies only that stored plan, and only to synthetic tools. The drawer shows before state and after state in the demo.
+
+Low-risk internal tools may auto-apply when policy allows. They are still planned and still visible. They do not contact a customer and do not write to an external system.
+
+| Class | Tools | Gate |
+| --- | --- | --- |
+| Low-risk internal | `dismiss_resolved`, `acknowledge`, `request_evidence` | Policy may auto-apply. |
+| State-changing, software | `create_task`, `send_message`, `update_account_risk` | Human approval required. |
+| State-changing, manufacturing | `expedite_material`, `notify_planner`, `update_order_risk` | Human approval required. |
 
 P0 software tools:
 
@@ -227,35 +237,60 @@ P0 software tools:
 | `send_message` | Record a local message (`recipient`, `body`, `case_id`). The recipient is a synthetic role, such as "Delivery owner". |
 | `update_account_risk` | Record a local account risk note (`account`, `risk_note`, `case_id`). |
 
-Manufacturing and logistics packs may register domain-appropriate tool variants later. Those names stay inside the pack. They use the same plan → show → approve → execute gate. They still hit synthetic state only.
+P0 manufacturing tools, same gate, synthetic state only:
+
+| Tool | Synthetic effect |
+| --- | --- |
+| `expedite_material` | Record a local material expedite (`material`, `detail`, `case_id`). |
+| `notify_planner` | Record a local notice to the production planner (`recipient`, `body`, `case_id`). |
+| `update_order_risk` | Record a local order risk note (`order_id`, `risk_note`, `case_id`). |
+
+Low-risk internal tools:
+
+| Tool | Synthetic effect |
+| --- | --- |
+| `dismiss_resolved` | Mark the case dismissed on the attention queue. |
+| `acknowledge` | Record that the case was seen (`case_id`, `note`). |
+| `request_evidence` | Record an internal ask for missing evidence (`case_id`, `detail`). |
+
+Logistics packs may register further tool names later. Those names stay inside the pack. State-changing names still use plan → show → approve → execute. They still hit synthetic state only.
+
+`ActionPlan.requires_approval` is `true` when any step is state-changing or external. It is `false` when every step is low-risk internal. A `false` plan may be applied at plan time under policy. A `true` plan changes nothing until execute with `approved: true`.
 
 Disposition behavior:
 
-- `VERIFY` may plan state-changing tools.
-- `SUPPRESS` plans no intervention. The honest result is unchanged state.
-- `ABSTAIN` may plan a request to collect the missing evidence. It must not act as if the commitment were verified.
+- `VERIFY` may plan state-changing tools. Those steps wait for approval.
+- `SUPPRESS` plans no state-changing intervention. Policy may dismiss the resolved case from the queue. The honest external result is unchanged enterprise state.
+- `ABSTAIN` may request the missing evidence. It must not act as if the commitment were verified, and it must not expedite, message, or update risk as though the commitment were confirmed.
 
 ---
 
 ## 10. Synthetic environment
 
-Synthetic CRM, Jira, Slack, and meeting records are the P0 enterprise environment. The UI and the pitch must not describe them as live production connectors.
+MongoDB Atlas is the P0 evidence and context store. It holds normalized enterprise evidence, metadata and provenance, semantic embeddings, and an Atlas Vector Search index. Checked-in fixtures are the seed. The pitch must not describe them as live production connectors, and the product must not grow a connectors admin.
 
-Software evidence sources are `crm`, `jira`, `slack`, and `meetings`. Later packs add their own source strings without forking the evidence shape and without a new screen.
+Retrieval is hybrid. See section 14 for the rule and the rationale.
+
+Software evidence sources are `crm`, `jira`, `slack`, and `meetings`. Manufacturing evidence sources are `erp`, `schedule`, `inventory`, and `quality`. Later packs add their own source strings without forking the evidence shape and without a new screen.
+
+Structured sources carry exact facts and are retrieved by metadata filters. Semantic sources (`slack`, `meetings`, descriptions, escalations, quality and operational comments) are retrieved by vector search inside those filters. If Atlas is unreachable, the same hybrid path runs on in-memory fixtures. The process stays up.
 
 ---
 
 ## 11. Demo cases
 
-Three software cases are the fixture and test expectations. They share one pipeline.
+Four cases share one pipeline. Three are software. One is manufacturing. Each case declares `domain` and `pattern`.
 
-| Case | `case_id` | Claim | Fixture expectation |
-| --- | --- | --- | --- |
-| Acme | `acme-sso-rollout` | SSO rollout blocked | `VERIFY` |
-| Globex | `globex-export-timeout` | Export timeout escalation | `SUPPRESS` (already resolved) |
-| Initech | `initech-europe-expansion` | Europe expansion at risk | `ABSTAIN` (insufficient evidence) |
+| Case | `case_id` | Domain | Pattern | Claim | Fixture expectation |
+| --- | --- | --- | --- | --- | --- |
+| Acme | `acme-sso-rollout` | `software` | `customer_commitment_intervention` | SSO rollout blocked | `VERIFY` |
+| Globex | `globex-export-timeout` | `software` | `customer_commitment_intervention` | Export timeout escalation | `SUPPRESS` (already resolved) |
+| Initech | `initech-europe-expansion` | `software` | `customer_commitment_intervention` | Europe expansion at risk | `ABSTAIN` (insufficient evidence) |
+| Orion Components | `orion-order-5000` | `manufacturing` | `production_commitment_intervention` | 5,000 units due Monday | `VERIFY` |
 
-`acme-sso-rollout` was already the analyze contract's canonical id. `globex-export-timeout` and `initech-europe-expansion` are assigned here so fixtures and tests have stable ids.
+Orion evidence is a committed order for 5,000 units due Monday, a material shortage, a throughput drop, and a quality hold. That shape is what supports intervention. The case id is not.
+
+`acme-sso-rollout` was already the analyze contract's canonical id. The other ids are assigned here so fixtures and tests stay stable.
 
 Tests may expect those dispositions from the seeded evidence. Implementation must not hardcode `case_id` or claim text to a decision. If the fixtures change, the label is recomputed. A response that can only be produced by a lookup table is not a valid demo.
 
@@ -277,11 +312,12 @@ interface Case {
   urgency: string;
   source_count: number;
   disposition: Disposition | null;
+  queue_status: "open" | "dismissed";
 }
 
 interface EvidenceRecord {
   id: string; // "{source}:{source_record_id}"
-  source: string; // P0: "crm" | "jira" | "slack" | "meetings"
+  source: string; // software: "crm" | "jira" | "slack" | "meetings"; manufacturing: "erp" | "schedule" | "inventory" | "quality"
   source_record_id: string;
   title: string;
   body: string;
@@ -311,7 +347,11 @@ interface AnalyzeResponse {
 
 `EvidenceRecord.id` example: `jira:JIRA-101`.
 
-`Case.disposition` is `null` until a validated analysis exists. Attention Today reads `account`, `claim`, `urgency`, `source_count`, and `disposition`. `id`, `domain`, and `pattern` are engine fields, not extra screens.
+Embeddings and `retrieval_class` (`structured` or `semantic`) live in the Atlas evidence store. They are not API fields. Similarity is not a confidence score and is not shown.
+
+`domain` and `pattern` are required on every case. They select the pack and the action tools. They are engine fields, not extra screens. Attention Today reads `account`, `claim`, `urgency`, `source_count`, `disposition`, and `queue_status`.
+
+`Case.disposition` is `null` until a validated analysis exists. `queue_status` is `open` until a low-risk `dismiss_resolved` runs.
 
 P1 queue state: after analyze, the queue returns the stored disposition. After an approved execute, the case may include `last_action_status` of `"none"` or `"executed"` so the same row can show that a synthetic action was applied. That is not a new column family and not a new page.
 
@@ -328,13 +368,19 @@ interface SyntheticState {
   tasks: Array<{ id: string; title: string; owner: string; case_id: string }>;
   messages: Array<{ id: string; recipient: string; body: string; case_id: string }>;
   account_risks: Array<{ account: string; risk_note: string; case_id: string }>;
+  material_expedites: Array<{ id: string; material: string; detail: string; case_id: string }>;
+  planner_notices: Array<{ id: string; recipient: string; body: string; case_id: string }>;
+  order_risks: Array<{ id: string; order_id: string; risk_note: string; case_id: string }>;
+  acknowledgements: Array<{ id: string; case_id: string; note: string }>;
+  evidence_requests: Array<{ id: string; case_id: string; detail: string }>;
+  dismissed_case_ids: string[];
 }
 
 interface ActionPlan {
   plan_id: string;
   case_id: string;
   steps: ActionStep[];
-  requires_approval: true;
+  requires_approval: boolean;
   before_state: SyntheticState;
 }
 
@@ -391,10 +437,23 @@ Unknown evidence id is HTTP 404.
 ## 14. Architecture
 
 ```text
-Cases → Sources → Assembler → Decision Agent → Validator → Action Planner → Approval → Executor
+Cases → Atlas evidence store → Hybrid retrieval → Assembler → Decision Agent → Validator → Action Planner → Policy or Approval → Executor
 ```
 
-One process. No microservices, Kafka, vector database, or multi-agent framework unless this Canon is updated first because P0 cannot ship without it. The default is that none of those are required.
+One process. No microservices, Kafka, or multi-agent framework.
+
+MongoDB Atlas is the evidence and context store: normalized evidence, metadata and provenance, semantic embeddings, and Atlas Vector Search. That store is required for the P0 architecture, not as a sponsor decoration.
+
+**Why hybrid retrieval.** Enterprise evidence has two shapes. Exact structured state answers "what is the ticket status, the order quantity, the commitment date, the inventory quantity, the id, the owner?" Semantic unstructured context answers "what did people say, what was escalated, what did the meeting or the quality note imply?" A pure structured query misses the note. Pure RAG can misread a quantity or a status because a nearby sentence looks similar. Hybrid retrieval uses each path for the shape it is good at.
+
+| Path | Used for | Must not be used for |
+| --- | --- | --- |
+| Deterministic structured retrieval | Ticket state, order quantity, commitment date, inventory quantity, ids, owner, status. Metadata filters on account, domain, time, and source. | Ranking Slack or meeting prose by token overlap alone when a vector index is available. |
+| Vector / semantic retrieval | Slack, meeting notes, descriptions, escalations, operational and quality comments. | Deciding an exact fact listed above. |
+
+Filters (account, domain, and optionally time and source) bound both paths. Vector search runs inside those filters, on semantic records only.
+
+If Atlas is unreachable, or the vector index is missing, the process falls back to the same hybrid code path over in-memory fixtures and local vectors. One store failure must not crash the demo.
 
 Preferred backend boundaries: `adapters/`, `evidence/`, `context/`, `reasoning/`, `validation/`, `actions/`, `api/`, `schemas/`.
 
@@ -416,9 +475,10 @@ Domain packs supply fixtures, the pattern, and action-tool definitions. Core rea
 8. Disposition is computed from assembled evidence. It is not a map from `case_id` or claim text.
 9. `VERIFY` only when evidence is sufficient and consistent enough to support intervention. `SUPPRESS` only when evidence supports not intervening. `ABSTAIN` when evidence is missing, conflicting, or insufficient, including when validation cannot recover a grounded decision.
 10. Investigation answers cite tool results from the four allowed tools. Investigation cannot call action tools.
-11. State-changing tools require PLAN → SHOW → APPROVE → EXECUTE → RESULT.
-12. Execute applies the stored synthetic plan only. It does not call live enterprise systems.
-13. A source that fails to load degrades that source. The demo process stays up and the decision can still be `ABSTAIN` or a partial grounded result. One source failure must not crash the demo.
+11. State-changing and external tools require PLAN → SHOW → APPROVE → EXECUTE → RESULT. Low-risk internal tools may auto-apply under policy. Neither class calls a live enterprise system.
+12. Execute applies the stored synthetic plan only. It does not call live enterprise systems. The client cannot swap tools at execute time.
+13. A source or Atlas outage degrades that store. The demo process stays up, hybrid retrieval falls back to fixtures, and the decision can still be `ABSTAIN` or a partial grounded result. One store failure must not crash the demo.
+14. Vector similarity must not establish ticket state, order quantity, commitment date, inventory quantity, ids, owner, or status. Those values come from structured retrieval.
 
 ---
 
@@ -452,13 +512,13 @@ Show analysis progress: collecting evidence, building context, checking contradi
 
 ## 17. Build priorities
 
-**P0 (must work before anything else).** Attention Today, Case Brief, dynamic analyze, all three dispositions, evidence with provenance, contradictions, recommended action, action plan, explicit approval, synthetic execute with before/after on the VERIFY path. `SUPPRESS` shows that no intervention runs. `ABSTAIN` shows what is missing.
+**P0 (must work before anything else).** Attention Today and Case Brief for software and manufacturing. Dynamic analyze, all three dispositions, hybrid retrieval from the Atlas evidence store, evidence with provenance, contradictions, recommended action, action plan, human approval for state-changing tools, synthetic execute with before/after on the VERIFY path. `SUPPRESS` shows that no state-changing intervention runs. `ABSTAIN` shows what is missing. P0-A is the full software loop. P0-B is the Orion manufacturing case on those same two screens.
 
-**P1 (only after P0 is stable).** Investigate drawer with the four grounded tools. One manufacturing pack case in the same queue and the same Case Brief. The queue reflects the latest disposition and, after execute, that a synthetic action was applied.
+**P1 (only after P0 is stable).** Investigate drawer with the four grounded tools. The queue reflects the latest disposition and, after execute, that a synthetic action was applied.
 
 **P1.5 (optional).** One logistics pack case, only if it fits in the remaining time without putting P0 at risk.
 
-**P2 (cut for the hackathon).** Everything else: live connectors, real SAP/MES/TMS, extra pages, auth complexity, analytics, confidence scores, vector search, multi-agent frameworks, workflow builders, and a domain-specific UI.
+**P2 (cut for the hackathon).** Everything else: live connectors, a connectors admin, OAuth connector product, real SAP/MES/TMS, extra pages, auth complexity, analytics, confidence scores, multi-agent frameworks, workflow builders, and a domain-specific UI. Atlas Vector Search is not in this cut. It is the semantic half of P0 retrieval.
 
 Internal freeze: **4:30 PM IST.**
 
@@ -468,9 +528,9 @@ Internal freeze: **4:30 PM IST.**
 
 Pitch line: **Mulanous Lite is an operational decision and action agent.**
 
-Ten beats, about seven minutes. Names and records are synthetic.
+About seven minutes. Software is the full loop. Manufacturing is a compressed cross-industry proof on the same screens. Names and records are synthetic.
 
-1. **Attention.** Open Attention Today. The queue shows account, claim, urgency, source count, and disposition when already analyzed.
+1. **Attention.** Open Attention Today. The queue includes software and manufacturing cases. Each row shows account, claim, urgency, source count, and disposition when already analyzed.
 2. **Select the wedge.** Open Acme, Customer Commitment Intervention: SSO rollout blocked. Call `POST /api/analyze` with `{ "case_id": "acme-sso-rollout" }`.
 3. **Context.** Case Brief shows flat evidence from CRM, Jira, Slack, and meetings, including provenance.
 4. **Challenge.** Show contradictions checked. The "already resolved" hypothesis is tested against evidence. No confidence score.
@@ -479,11 +539,14 @@ Ten beats, about seven minutes. Names and records are synthetic.
 7. **When evidence is not enough.** Open Initech (`initech-europe-expansion`). The same pipeline returns `ABSTAIN` and names the missing evidence.
 8. **Plan.** Return to Acme. The Take Action drawer shows a synthetic plan (`create_task`, `send_message`, and/or `update_account_risk`) and the before state. Nothing has run yet.
 9. **Approve.** The manager explicitly approves. There is no autonomous write-back.
-10. **Execute.** Synthetic tools run. Before and after are both visible. Close on the pitch line: when to act, when not to act, and when to ask for more evidence.
+10. **Execute.** Synthetic tools run. Before and after are both visible.
+11. **Cross-industry.** Open Orion Components (`orion-order-5000`) on the same Attention Today and the same Case Brief. `domain` is `manufacturing` and `pattern` is `production_commitment_intervention`. Call the same `POST /api/analyze`. Evidence from ERP, the production schedule, inventory, and quality notes supports `VERIFY`: a committed order of 5,000 units due Monday, a material shortage, a throughput drop, and a quality hold. The Take Action drawer shows manufacturing tools (`expedite_material`, `notify_planner`, `update_order_risk`). State-changing steps still wait for approval. There is no manufacturing-specific page.
 
-If P1 is up, one grounded Investigate question on Case Brief can sit between beats 5 and 6. It does not add a page. If P1 manufacturing is up, one production-commitment case in the same queue can replace a long explanation of cross-industry scope. Skip both rather than risk the P0 path.
+Close on the pitch line: when to act, when not to act, when to ask for more evidence, and the same engine on a second domain.
 
-These ten beats were not written down in the Day 1 spec. This section freezes them.
+If P1 is up, one grounded Investigate question on Case Brief can sit between beats 5 and 6. It does not add a page. Do not skip the Orion beat. Do not add a third page to make room for it.
+
+These beats freeze the seven-minute demo. Software stays the full loop. Manufacturing stays compressed.
 
 ---
 
@@ -494,6 +557,7 @@ Lite stays a thin slice. Do not implement full Mulanous in the hackathon. Keep t
 | Lite module | Mulanous concept |
 | --- | --- |
 | Source adapters and domain packs | Adapters and context pack |
+| Atlas evidence store and hybrid retrieval | Structured state plus semantic context |
 | Challenge results / contradictions | Pattern intelligence and counter-interrogation |
 | Flat evidence id, source, `observed_at` | Provenance |
 | `VERIFY` / `SUPPRESS` / `ABSTAIN` validator | Tri-state gate |
@@ -507,7 +571,7 @@ Core assemble / reason / validate / investigate / actions stays industry-agnosti
 
 ## 20. Change control
 
-Product and architecture stay frozen until P0 works.
+Product and architecture stay frozen until P0 works. This revision freezes the Atlas evidence store, hybrid retrieval, P0-A software, P0-B manufacturing, and the split between low-risk internal actions and state-changing approval.
 
 A new idea that does not materially improve the 7-minute demo goes to **POST-HACKATHON / FUTURE** and is not built in this hackathon.
 
@@ -519,7 +583,7 @@ Unchanged without a Canon edit:
 - primary question
 - the two-screen surface
 - the three dispositions
-- the decision pipeline and the approval gate
+- the decision pipeline and the state-changing approval gate
 - synthetic-only execution
 - the rule that dispositions are computed, not hardcoded
 
@@ -529,7 +593,7 @@ Unchanged without a Canon edit:
 
 Success is a working dynamic prototype: grounded evidence, all three decision states, investigation, human-approved synthetic execution, a 7-minute demo, and enough credibility to support incubation.
 
-P0 is the qualification gate. The Investigate drawer, the manufacturing case, and queue refresh are P1 once P0 is stable. A hardcoded demo result does not count.
+P0 is the qualification gate: software and manufacturing on one API and the same two screens, hybrid retrieval, all three decision states, and human-approved state-changing execution. The Investigate drawer and queue refresh stay P1 once that path is stable. A hardcoded demo result does not count.
 
 ---
 
