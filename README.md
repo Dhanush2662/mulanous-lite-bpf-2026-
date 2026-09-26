@@ -37,7 +37,7 @@ npm install
 npm run dev
 ```
 
-Open `http://127.0.0.1:41731`. The UI reads `NEXT_PUBLIC_API_BASE_URL` (default `http://127.0.0.1:8000`). See [frontend/README.md](frontend/README.md) and [backend/README.md](backend/README.md).
+Open `http://127.0.0.1:41731`. The UI reads `VITE_API_BASE` (default `http://127.0.0.1:8000`). See [frontend/README.md](frontend/README.md) and [backend/README.md](backend/README.md).
 
 **Challenge disclosure:** this prototype is being built during BPF 2026. All checked-in enterprise inputs are synthetic. AI tools are used to help plan, write, and review the prototype. No private Mulanous source code or customer data belongs in this public repository.
 

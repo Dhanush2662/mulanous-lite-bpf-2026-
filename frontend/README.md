@@ -1,16 +1,15 @@
 # Frontend
 
-Two screens, wired to the live API:
+Vite, React, and TypeScript. Two routes:
 
 ```text
 Attention Today
 → Case Brief
-    ├── Evidence Inspector
-    ├── Investigate drawer
+    ├── Evidence Inspector drawer
     └── Take Action drawer
 ```
 
-`NEXT_PUBLIC_API_BASE_URL` defaults to `http://127.0.0.1:8000`. Copy [`.env.example`](.env.example) if the API is elsewhere.
+`VITE_API_BASE` defaults to `http://127.0.0.1:8000`. Copy [`.env.example`](.env.example) if the API is elsewhere. If the service is down or the queue is empty, the UI uses a typed fallback captured from the fixture API.
 
 ```bash
 cd frontend

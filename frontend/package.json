@@ -1,33 +1,28 @@
 {
   "name": "mulanous-lite-frontend",
-  "version": "0.1.0",
   "private": true,
+  "version": "0.1.0",
+  "type": "module",
   "scripts": {
-    "dev": "next dev --hostname 0.0.0.0 --port 41731",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@base-ui/react": "^1.8.0",
-    "class-variance-authority": "^0.7.1",
-    "cn": "^0.4.0",
-    "lucide-react": "^1.48.0",
-    "next": "15.5.26",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "shadcn": "^4.21.0",
-    "tw-animate-css": "^1.4.0"
+    "@fontsource/ibm-plex-mono": "^5.2.5",
+    "@fontsource/inter": "^5.2.5",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.9.1"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "15.5.26",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "oxlint": "^1.81.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0"
   }
 }
