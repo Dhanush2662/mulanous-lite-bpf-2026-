@@ -1,10 +1,12 @@
 # Mulanous Lite — BPF 2026 prototype
 
+**Authority:** [docs/MULANOUS_LITE_CANON.md](docs/MULANOUS_LITE_CANON.md) is the single source of truth. If this README conflicts with it, the Canon wins.
+
 Mulanous Lite helps an enterprise account team decide whether a reported account signal deserves follow-up. Important claims are scattered across CRM notes, Jira issues, Slack messages, and meeting notes; a single mention can be stale, duplicated, or contradicted.
 
 **User:** Delivery / Operations Manager.
 
-**Product freeze:** [PRODUCT_SPEC](docs/PRODUCT_SPEC.md) is the authoritative surface for BPF Day 1.
+**Product freeze:** [PRODUCT_SPEC](docs/PRODUCT_SPEC.md) is the Day 1 surface note. The Canon wins on conflict.
 
 ```text
 Attention Today
