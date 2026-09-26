@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom"
+
 import { SourceChips } from "../../components/SourceChips"
 import { challengeLabel, domainSources, formatObserved, sourceLabel } from "../labels"
 import type { AnalyzeResponse, Domain, EvidenceRecord } from "../../types/api"
@@ -67,7 +69,12 @@ export function CaseBriefView({
       </section>
 
       <section className="evidence-block">
-        <h3>EVIDENCE</h3>
+        <div className="section-row">
+          <h3>EVIDENCE</h3>
+          <Link className="text-link" to={`/cases/${analysis.case_id}/evidence`}>
+            Evidence case
+          </Link>
+        </div>
         {analysis.evidence.length === 0 ? (
           <p className="status-copy">No evidence records were returned with this decision.</p>
         ) : (

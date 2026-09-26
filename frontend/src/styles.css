@@ -378,11 +378,150 @@ h1 {
 }
 
 .inspector h2 {
-  margin: 0 0 16px;
+  margin: 0;
   font-family: var(--mono);
   font-size: 12px;
   font-weight: 400;
   letter-spacing: 0.16em;
+}
+
+.inspector-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.section-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.text-link {
+  color: var(--gold);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+
+.evidence-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding: 18px 32px;
+}
+
+.evidence-top a {
+  color: var(--gold);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+}
+
+.crumbs {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.crumbs a {
+  color: var(--text);
+}
+
+.evidence-case {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.evidence-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.evidence-title h1 {
+  font-size: 28px;
+}
+
+.disposition {
+  margin: 4px 0 0;
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+
+.disposition.verify {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+  margin: 22px 0 0;
+}
+
+.meta-row dt,
+.evidence-case h2 {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+}
+
+.meta-row dd,
+.evidence-case section p {
+  margin: 6px 0 0;
+}
+
+.evidence-case section {
+  margin-top: 28px;
+}
+
+.note-source {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.note-list {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.note-list li {
+  border-top: 1px solid var(--border);
+  padding: 12px 0;
+}
+
+.note-list button {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+}
+
+.note-list button.is-selected .mono {
+  color: var(--gold);
 }
 
 .evidence-table td.summary {
@@ -839,8 +978,15 @@ h1 {
   }
 
   .brief-layout,
+  .evidence-case,
   .action-block dl {
     grid-template-columns: 1fr;
+  }
+
+  .evidence-top,
+  .evidence-title {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .drawer {
