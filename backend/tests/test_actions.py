@@ -15,17 +15,31 @@ def _plan(client: TestClient, case_id: str) -> dict:
     response = client.post("/api/actions/plan", json={"case_id": case_id})
     assert response.status_code == 200
     body = response.json()
-    assert body["requires_approval"] is True
     assert body["case_id"] == case_id
     assert body["plan_id"]
     return body
+
+
+def _empty_state() -> dict:
+    return {
+        "tasks": [],
+        "messages": [],
+        "account_risks": [],
+        "material_expedites": [],
+        "planner_notices": [],
+        "order_risks": [],
+        "acknowledgements": [],
+        "evidence_requests": [],
+        "dismissed_case_ids": [],
+    }
 
 
 def test_plan_does_not_execute(client: TestClient) -> None:
     _analyze(client, "acme-sso-rollout")
     first = _plan(client, "acme-sso-rollout")
     second = _plan(client, "acme-sso-rollout")
-    assert first["before_state"] == {"tasks": [], "messages": [], "account_risks": []}
+    assert first["requires_approval"] is True
+    assert first["before_state"] == _empty_state()
     assert second["before_state"] == first["before_state"]
     assert first["plan_id"] != second["plan_id"]
     assert {step["tool"] for step in first["steps"]} == {
@@ -78,31 +92,52 @@ def test_execute_requires_approval_and_then_changes_state(client: TestClient) ->
     assert again.json() == {"error": "Plan already executed"}
 
 
-def test_suppress_plan_has_no_intervention_and_execute_leaves_state(client: TestClient) -> None:
+def test_suppress_dismisses_from_the_queue_without_state_changing_tools(client: TestClient) -> None:
     _analyze(client, "globex-export-timeout")
     plan = _plan(client, "globex-export-timeout")
-    assert plan["steps"] == []
-    approved = client.post(
+    assert plan["requires_approval"] is False
+    assert [step["tool"] for step in plan["steps"]] == ["dismiss_resolved"]
+    assert plan["before_state"]["tasks"] == []
+    assert plan["before_state"]["messages"] == []
+    assert plan["before_state"]["account_risks"] == []
+    assert plan["before_state"]["dismissed_case_ids"] == []
+    case = client.get("/api/cases/globex-export-timeout")
+    assert case.json()["queue_status"] == "dismissed"
+    assert case.json()["last_action_status"] == "none"
+    again = client.post(
         "/api/actions/execute",
         json={"plan_id": plan["plan_id"], "approved": True},
     )
-    assert approved.status_code == 200
-    body = approved.json()
-    assert body["results"] == []
-    assert body["before_state"] == body["after_state"]
-    assert body["after_state"] == {"tasks": [], "messages": [], "account_risks": []}
-    case = client.get("/api/cases/globex-export-timeout")
-    assert case.json()["last_action_status"] == "none"
+    assert again.status_code == 409
+    assert again.json() == {"error": "Plan already executed"}
+    follow = _plan(client, "globex-export-timeout")
+    assert follow["before_state"]["dismissed_case_ids"] == ["globex-export-timeout"]
+    assert follow["before_state"]["tasks"] == []
 
 
 def test_abstain_plan_asks_for_evidence_and_does_not_assert_risk(client: TestClient) -> None:
     _analyze(client, "initech-europe-expansion")
     plan = _plan(client, "initech-europe-expansion")
+    assert plan["requires_approval"] is False
     tools = [step["tool"] for step in plan["steps"]]
-    assert tools == ["create_task", "send_message"]
+    assert tools == ["request_evidence"]
     assert "update_account_risk" not in tools
-    message = next(step for step in plan["steps"] if step["tool"] == "send_message")
-    assert "not treat this commitment as verified" in message["args"]["body"].lower()
+    step = plan["steps"][0]
+    assert "do not treat the commitment as verified" in step["summary"].lower()
+    assert "milestone" in step["args"]["detail"].lower()
+    case = client.get("/api/cases/initech-europe-expansion")
+    assert case.json()["queue_status"] == "open"
+    assert case.json()["last_action_status"] == "none"
+    follow = _plan(client, "initech-europe-expansion")
+    assert len(follow["before_state"]["evidence_requests"]) == 1
+    assert follow["before_state"]["tasks"] == []
+    assert follow["before_state"]["messages"] == []
+    assert follow["before_state"]["account_risks"] == []
+    replay = client.post(
+        "/api/actions/execute",
+        json={"plan_id": plan["plan_id"], "approved": True},
+    )
+    assert replay.status_code == 409
 
 
 def test_plan_before_analyze_is_rejected(client: TestClient) -> None:

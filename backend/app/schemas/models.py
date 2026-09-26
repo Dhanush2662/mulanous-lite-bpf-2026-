@@ -13,7 +13,18 @@ from pydantic import BaseModel, ConfigDict, Field
 Disposition = Literal["VERIFY", "SUPPRESS", "ABSTAIN"]
 Domain = Literal["software", "manufacturing", "logistics"]
 ChallengeOutcome = Literal["supported", "not_supported", "inconclusive"]
-ActionTool = Literal["create_task", "send_message", "update_account_risk"]
+ActionTool = Literal[
+    "create_task",
+    "send_message",
+    "update_account_risk",
+    "expedite_material",
+    "notify_planner",
+    "update_order_risk",
+    "dismiss_resolved",
+    "acknowledge",
+    "request_evidence",
+]
+RetrievalClass = Literal["structured", "semantic"]
 InvestigationTool = Literal[
     "get_case",
     "get_evidence",
@@ -35,6 +46,7 @@ class Case(BaseModel):
     urgency: str
     source_count: int
     disposition: Disposition | None = None
+    queue_status: Literal["open", "dismissed"] = "open"
     last_action_status: Literal["none", "executed"] = "none"
 
 
@@ -54,7 +66,13 @@ class EvidenceRecord(BaseModel):
 
 
 class StoredEvidence(BaseModel):
+    """Store row. Embeddings and exact facts stay off the API evidence record."""
+
     account_id: str
+    domain: str
+    retrieval_class: RetrievalClass
+    facts: dict[str, str] = Field(default_factory=dict)
+    embedding: list[float] | None = None
     record: EvidenceRecord
 
 
@@ -105,6 +123,8 @@ class AssembledContext(BaseModel):
     """Evidence selected for one case. The model only sees these records."""
 
     case_id: str
+    domain: str
+    pattern: str
     account: str
     claim: str
     urgency: str
@@ -131,14 +151,53 @@ class SyntheticAccountRisk(BaseModel):
     case_id: str
 
 
+class MaterialExpedite(BaseModel):
+    id: str
+    material: str
+    detail: str
+    case_id: str
+
+
+class PlannerNotice(BaseModel):
+    id: str
+    recipient: str
+    body: str
+    case_id: str
+
+
+class OrderRisk(BaseModel):
+    id: str
+    order_id: str
+    risk_note: str
+    case_id: str
+
+
+class Acknowledgement(BaseModel):
+    id: str
+    case_id: str
+    note: str
+
+
+class EvidenceRequestNote(BaseModel):
+    id: str
+    case_id: str
+    detail: str
+
+
 class SyntheticState(BaseModel):
     tasks: list[SyntheticTask] = Field(default_factory=list)
     messages: list[SyntheticMessage] = Field(default_factory=list)
     account_risks: list[SyntheticAccountRisk] = Field(default_factory=list)
+    material_expedites: list[MaterialExpedite] = Field(default_factory=list)
+    planner_notices: list[PlannerNotice] = Field(default_factory=list)
+    order_risks: list[OrderRisk] = Field(default_factory=list)
+    acknowledgements: list[Acknowledgement] = Field(default_factory=list)
+    evidence_requests: list[EvidenceRequestNote] = Field(default_factory=list)
+    dismissed_case_ids: list[str] = Field(default_factory=list)
 
 
 class ActionStep(BaseModel):
-    """One planned tool call. Nothing runs until an approved execute."""
+    """One planned tool call. State-changing steps wait for approval."""
 
     tool: ActionTool
     summary: str
@@ -149,7 +208,7 @@ class ActionPlan(BaseModel):
     plan_id: str
     case_id: str
     steps: list[ActionStep]
-    requires_approval: Literal[True] = True
+    requires_approval: bool = True
     before_state: SyntheticState
 
 

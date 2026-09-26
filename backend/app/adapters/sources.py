@@ -37,6 +37,7 @@ class EvidenceSeed(BaseModel):
     text: str | None = None
     body: str | None = None
     observed_at: str | None = None
+    facts: dict[str, str] = Field(default_factory=dict)
 
     def body_text(self) -> str:
         return (self.body if self.body is not None else self.text or "").strip()
@@ -55,15 +56,32 @@ class LoadedWorkspace:
     statuses: dict[str, str] = field(default_factory=dict)
 
 
-def load_workspace(data_dir: Path) -> LoadedWorkspace:
+def load_workspace(data_dir: Path, pack_dirs: list[Path] | None = None) -> LoadedWorkspace:
     loaded = LoadedWorkspace()
-    loaded.cases = _load_cases(data_dir / "cases.json", loaded.statuses)
+    loaded.cases = _load_cases(data_dir / "cases.json", loaded.statuses, "cases")
     for source in EVIDENCE_SOURCES:
         loaded.records.extend(
             _load_evidence(data_dir / f"{source}.json", source, loaded.statuses)
         )
+    for pack_dir in pack_dirs or []:
+        _load_pack(pack_dir, loaded)
     logger.info("source_load state=%s", loaded.statuses)
     return loaded
+
+
+def _load_pack(pack_dir: Path, loaded: LoadedWorkspace) -> None:
+    label = pack_dir.name
+    if not pack_dir.is_dir():
+        loaded.statuses[label] = "unavailable"
+        logger.error("source_load source=%s state=unavailable", label)
+        return
+    loaded.cases.extend(
+        _load_cases(pack_dir / "cases.json", loaded.statuses, f"{label}:cases")
+    )
+    for path in sorted(pack_dir.glob("*.json")):
+        if path.name == "cases.json":
+            continue
+        loaded.records.extend(_load_evidence(path, path.stem, loaded.statuses))
 
 
 def _read_json_array(path: Path, statuses: dict[str, str], label: str) -> list[object] | None:
@@ -88,8 +106,8 @@ def _read_json_array(path: Path, statuses: dict[str, str], label: str) -> list[o
     return payload
 
 
-def _load_cases(path: Path, statuses: dict[str, str]) -> list[CaseSeed]:
-    payload = _read_json_array(path, statuses, "cases")
+def _load_cases(path: Path, statuses: dict[str, str], label: str) -> list[CaseSeed]:
+    payload = _read_json_array(path, statuses, label)
     if payload is None:
         return []
     cases: list[CaseSeed] = []
@@ -97,8 +115,8 @@ def _load_cases(path: Path, statuses: dict[str, str]) -> list[CaseSeed]:
         try:
             cases.append(CaseSeed.model_validate(item))
         except ValidationError:
-            logger.error("source_load source=cases state=skipped index=%s", index)
-    statuses["cases"] = f"loaded:{len(cases)}"
+            logger.error("source_load source=%s state=skipped index=%s", label, index)
+    statuses[label] = f"loaded:{len(cases)}"
     return cases
 
 

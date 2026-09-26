@@ -24,7 +24,8 @@ Attention Today
 ## Layout
 
 ```text
-backend/   API and decision logic (in progress)
+backend/   Python FastAPI decision and action API
+ingest/    Go fixture ingest into MongoDB Atlas (no connector admin)
 frontend/  UI owned by Syam; can start from frontend/mock-analysis.json
 data/      synthetic CRM, Jira, Slack, and meeting records
 docs/      product freeze, architecture, demo flow, and API contract

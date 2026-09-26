@@ -1,0 +1,16 @@
+[
+  {
+    "id": "ORION-QA-17",
+    "account_id": "orion-001",
+    "title": "Quality hold on the Orion run",
+    "text": "Quality hold remains open on the Orion run. The hold is a blocker. The line cannot complete the 5,000 units due Monday.",
+    "observed_at": "2026-09-25T13:00:00Z"
+  },
+  {
+    "id": "ORION-QA-18",
+    "account_id": "orion-001",
+    "title": "Ops escalation before Monday",
+    "text": "Ops escalation comment: the quality hold and material shortage are still open ahead of Monday. Production planner was told the units cannot complete.",
+    "observed_at": "2026-09-25T15:10:00Z"
+  }
+]

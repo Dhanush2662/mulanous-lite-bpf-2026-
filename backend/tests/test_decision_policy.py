@@ -10,7 +10,12 @@ from app.schemas.models import EvidenceRecord
 
 def test_application_code_does_not_embed_demo_case_ids() -> None:
     root = Path(__file__).resolve().parents[1] / "app"
-    banned = ("acme-sso-rollout", "globex-export-timeout", "initech-europe-expansion")
+    banned = (
+        "acme-sso-rollout",
+        "globex-export-timeout",
+        "initech-europe-expansion",
+        "orion-order-5000",
+    )
     for path in root.rglob("*.py"):
         text = path.read_text(encoding="utf-8")
         for token in banned:

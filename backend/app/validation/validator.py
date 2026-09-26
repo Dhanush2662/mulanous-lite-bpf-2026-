@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from datetime import datetime
 
 from pydantic import ValidationError
 
 from app.evidence.timestamps import is_utc_timestamp
+from app.reasoning.read_evidence import read_evidence
 from app.schemas.models import (
     AnalyzeResponse,
     AssembledContext,
@@ -82,7 +84,7 @@ def _grounding_errors(decision: ModelDecision, context: AssembledContext) -> lis
     by_id = {record.id: record for record in context.evidence}
     errors: list[str] = []
     selected = _selected_records(decision.evidence_ids, by_id, errors)
-    _check_decision_shape(decision, selected, errors)
+    _check_decision_shape(decision, selected, context, errors)
     _check_challenges(decision.contradictions_checked, set(decision.evidence_ids), errors)
     _check_missing(decision, errors)
     return errors
@@ -114,14 +116,57 @@ def _selected_records(
 def _check_decision_shape(
     decision: ModelDecision,
     selected: list[EvidenceRecord],
+    context: AssembledContext,
     errors: list[str],
 ) -> None:
     if decision.decision in {"VERIFY", "SUPPRESS"} and not selected:
         errors.append(f"{decision.decision} requires at least one evidence record")
+    if decision.decision == "VERIFY" and not decision.contradictions_checked:
+        errors.append("VERIFY requires a contradiction check")
+    if decision.decision == "VERIFY" and context.domain == "manufacturing":
+        sources = {record.source for record in selected}
+        if not {"erp", "inventory"} <= sources:
+            errors.append("Manufacturing VERIFY requires order and inventory evidence")
+    if decision.decision == "SUPPRESS":
+        _check_suppression(selected, context, errors)
     if decision.decision == "ABSTAIN" and not decision.missing_evidence:
         errors.append("ABSTAIN requires missing_evidence")
+    for name in ("reason", "recommended_action", "suggested_owner"):
+        if not getattr(decision, name).strip():
+            errors.append(f"{name} must be non-empty")
     if decision.due_hint is not None and not decision.due_hint.strip():
         errors.append("due_hint must be null or non-empty")
+
+
+def _check_suppression(
+    selected: list[EvidenceRecord],
+    context: AssembledContext,
+    errors: list[str],
+) -> None:
+    resolutions = read_evidence(context.claim, selected).resolved_records
+    if not resolutions:
+        errors.append("SUPPRESS requires resolving evidence")
+        return
+    dated_resolutions = []
+    for record in resolutions:
+        observed = _timestamp(record)
+        if observed is not None:
+            dated_resolutions.append(observed)
+    latest_resolution = max(dated_resolutions, default=None)
+    for record in read_evidence(context.claim, context.evidence).open_records:
+        observed = _timestamp(record)
+        if latest_resolution is None or observed is None or observed >= latest_resolution:
+            errors.append("SUPPRESS conflicts with unresolved evidence")
+            return
+
+
+def _timestamp(record: EvidenceRecord) -> datetime | None:
+    if record.observed_at is None:
+        return None
+    try:
+        return datetime.fromisoformat(record.observed_at.replace("Z", "+00:00"))
+    except ValueError:
+        return None
 
 
 def _check_challenges(

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "ORION-LINE-3",
+    "account_id": "orion-001",
+    "title": "Line 3 throughput drop",
+    "text": "Line 3 throughput drop. The line is behind the committed 5,000 units due Monday. Status is behind. This blocker is unresolved and the line cannot complete the order.",
+    "observed_at": "2026-09-25T11:00:00Z",
+    "facts": {
+      "line": "Line 3",
+      "status": "behind",
+      "throughput": "dropped"
+    }
+  }
+]

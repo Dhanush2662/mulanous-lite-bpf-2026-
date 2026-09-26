@@ -32,7 +32,13 @@ def test_invented_evidence_ids_are_not_returned() -> None:
             "missing_evidence": [],
         }
     )
-    client = TestClient(create_app(provider=ScriptedDecisionProvider([payload, payload])))
+    client = TestClient(
+        create_app(
+            provider=ScriptedDecisionProvider([payload, payload]),
+            use_atlas=False,
+            force_fake_embeddings=True,
+        )
+    )
     response = client.post("/api/analyze", json={"case_id": "acme-sso-rollout"})
     assert response.status_code == 200
     body = response.json()
@@ -44,7 +50,13 @@ def test_invented_evidence_ids_are_not_returned() -> None:
 
 
 def test_malformed_model_output_abstains() -> None:
-    client = TestClient(create_app(provider=ScriptedDecisionProvider(["not json", "still not json"])))
+    client = TestClient(
+        create_app(
+            provider=ScriptedDecisionProvider(["not json", "still not json"]),
+            use_atlas=False,
+            force_fake_embeddings=True,
+        )
+    )
     response = client.post("/api/analyze", json={"case_id": "acme-sso-rollout"})
     assert response.status_code == 200
     body = response.json()
@@ -54,7 +66,13 @@ def test_malformed_model_output_abstains() -> None:
 
 
 def test_model_timeout_abstains() -> None:
-    client = TestClient(create_app(provider=FailingDecisionProvider()))
+    client = TestClient(
+        create_app(
+            provider=FailingDecisionProvider(),
+            use_atlas=False,
+            force_fake_embeddings=True,
+        )
+    )
     response = client.post("/api/analyze", json={"case_id": "globex-export-timeout"})
     assert response.status_code == 200
     assert response.json()["decision"] == "ABSTAIN"

@@ -1,0 +1,11 @@
+[
+  {
+    "id": "orion-order-5000",
+    "domain": "manufacturing",
+    "pattern": "production_commitment_intervention",
+    "account": "Orion Components",
+    "account_id": "orion-001",
+    "claim": "5,000 units due Monday",
+    "urgency": "Due Monday"
+  }
+]

@@ -10,7 +10,11 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture
 def client() -> TestClient:
-    app = create_app(provider=DeterministicDecisionProvider())
+    app = create_app(
+        provider=DeterministicDecisionProvider(),
+        use_atlas=False,
+        force_fake_embeddings=True,
+    )
     return TestClient(app)
 
 
@@ -29,7 +33,16 @@ def assert_grounded(body: dict) -> None:
     evidence_ids = {item["id"] for item in body["evidence"]}
     for item in body["evidence"]:
         assert item["id"] == f"{item['source']}:{item['source_record_id']}"
-        assert item["source"] in {"crm", "jira", "slack", "meetings"}
+        assert item["source"] in {
+            "crm",
+            "jira",
+            "slack",
+            "meetings",
+            "erp",
+            "schedule",
+            "inventory",
+            "quality",
+        }
     for challenge in body["contradictions_checked"]:
         assert set(challenge["evidence_ids"]) <= evidence_ids
         assert challenge["result"] in {"supported", "not_supported", "inconclusive"}
