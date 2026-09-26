@@ -8,6 +8,7 @@ from app.evidence.embeddings import FakeEmbedder
 from app.evidence.store import MemoryEvidenceStore, PreparedStore, prepare_store
 from app.main import create_app
 from app.reasoning.deterministic import DeterministicDecisionProvider
+from app.reasoning.read_evidence import record_stance
 from app.schemas.models import EvidenceRecord, StoredEvidence
 from fastapi.testclient import TestClient
 
@@ -50,6 +51,81 @@ def test_query_embedding_failure_keeps_structured_evidence() -> None:
         embedder=FailingQueryEmbedder(),
     )
     assert [item.id for item in selected] == [record.id]
+
+
+def test_resolved_shortage_does_not_read_as_open() -> None:
+    record = EvidenceRecord(
+        id="inventory:RESOLVED-1",
+        source="inventory",
+        source_record_id="RESOLVED-1",
+        title="Material shortage resolved",
+        body="The material shortage was resolved before the production run.",
+        observed_at="2026-09-25T10:00:00Z",
+    )
+    assert record_stance(record) == "resolved"
+
+
+def test_newer_open_signal_overrides_old_resolution() -> None:
+    record = EvidenceRecord(
+        id="inventory:OPEN-3",
+        source="inventory",
+        source_record_id="OPEN-3",
+        title="Material shortage resolved, then reopened",
+        body="The shortage was resolved, but the line is still blocked.",
+        observed_at="2026-09-25T10:00:00Z",
+    )
+    assert record_stance(record) == "open"
+
+
+def test_semantic_note_survives_structured_context_cap() -> None:
+    embedder = FakeEmbedder()
+    rows = [
+        StoredEvidence(
+            account_id="example-001",
+            domain="software",
+            retrieval_class="structured",
+            facts={"status": "open"},
+            embedding=None,
+            record=EvidenceRecord(
+                id=f"jira:FACT-{index}",
+                source="jira",
+                source_record_id=f"FACT-{index}",
+                title="Operational fact",
+                body="The rollout is blocked.",
+                observed_at="2026-09-25T10:00:00Z",
+            ),
+        )
+        for index in range(13)
+    ]
+    rows.append(
+        StoredEvidence(
+            account_id="example-001",
+            domain="software",
+            retrieval_class="semantic",
+            facts={},
+            embedding=embedder.embed("Customer escalation"),
+            record=EvidenceRecord(
+                id="slack:ESCALATION-1",
+                source="slack",
+                source_record_id="ESCALATION-1",
+                title="Customer escalation",
+                body="The customer escalated the rollout blocker.",
+                observed_at="2026-09-25T10:00:00Z",
+            ),
+        )
+    )
+    store = MemoryEvidenceStore()
+    store.upsert(rows, [])
+
+    selected = hybrid_retrieve(
+        store,
+        account_id="example-001",
+        domain="software",
+        claim="Customer escalation",
+        embedder=embedder,
+    )
+    assert len(selected) == 12
+    assert any(item.id == "slack:ESCALATION-1" for item in selected)
 
 
 def test_atlas_read_failure_falls_back_to_fixture_store(monkeypatch: pytest.MonkeyPatch) -> None:
