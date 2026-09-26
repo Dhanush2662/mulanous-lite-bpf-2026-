@@ -33,7 +33,8 @@ def hybrid_retrieve(
     except Exception as exc:
         logger.error("semantic_retrieval state=unavailable error_type=%s", type(exc).__name__)
         semantic = []
-    merged = _dedupe(structured + semantic)[:EVIDENCE_CAP]
+    structured_limit = EVIDENCE_CAP - 1 if semantic else EVIDENCE_CAP
+    merged = _dedupe(structured[:structured_limit] + semantic)[:EVIDENCE_CAP]
     logger.info(
         "hybrid_retrieve account_id=%s domain=%s structured=%s semantic=%s context_size=%s",
         account_id,

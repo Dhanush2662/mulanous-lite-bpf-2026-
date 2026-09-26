@@ -518,7 +518,7 @@ Show analysis progress: collecting evidence, building context, checking contradi
 
 **P1.5 (optional).** One logistics pack case, only if it fits in the remaining time without putting P0 at risk.
 
-**P2 (cut for the hackathon).** Everything else: live connectors, a connectors admin, OAuth connector product, real SAP/MES/TMS, extra pages, auth complexity, analytics, confidence scores, multi-agent frameworks, workflow builders, and a domain-specific UI. Atlas Vector Search is not in this cut. It is the semantic half of P0 retrieval.
+**P2 (cut for the hackathon).** Everything else: live connectors, a connectors admin, OAuth connector product, real SAP/MES/TMS, extra pages, auth complexity, analytics, confidence scores, multi-agent frameworks, workflow builders, and a domain-specific UI. Atlas Vector Search remains the semantic half of P0 retrieval.
 
 Internal freeze: **4:30 PM IST.**
 

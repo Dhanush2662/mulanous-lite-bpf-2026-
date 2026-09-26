@@ -105,9 +105,11 @@ def record_stance(record: EvidenceRecord) -> str:
     open_hit = _any_phrase(text, OPEN_PHRASES)
     resolved_hit = _any_phrase(text, RESOLVED_PHRASES)
     if open_hit and resolved_hit:
-        if _any_phrase(text, _STRONG_OPEN):
-            return "open"
-        return "resolved"
+        return (
+            "open"
+            if _last_phrase_end(text, _STRONG_OPEN) > _last_phrase_end(text, RESOLVED_PHRASES)
+            else "resolved"
+        )
     if open_hit:
         return "open"
     if resolved_hit:
@@ -139,6 +141,16 @@ def _any_phrase(text: str, phrases: tuple[str, ...]) -> bool:
     return any(_contains(text, phrase) for phrase in phrases)
 
 
+def _last_phrase_end(text: str, phrases: tuple[str, ...]) -> int:
+    return max(
+        (match.end() for phrase in phrases for match in re.finditer(_pattern(phrase), text)),
+        default=-1,
+    )
+
+
 def _contains(text: str, phrase: str) -> bool:
-    pattern = rf"(?<!\w){re.escape(phrase)}(?!\w)"
-    return re.search(pattern, text) is not None
+    return re.search(_pattern(phrase), text) is not None
+
+
+def _pattern(phrase: str) -> str:
+    return rf"(?<!\w){re.escape(phrase)}(?!\w)"
