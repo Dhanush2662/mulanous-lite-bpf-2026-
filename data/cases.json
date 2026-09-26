@@ -1,0 +1,29 @@
+[
+  {
+    "id": "acme-sso-rollout",
+    "domain": "software",
+    "pattern": "customer_commitment_intervention",
+    "account": "Acme",
+    "account_id": "acme-001",
+    "claim": "SSO rollout blocked",
+    "urgency": "Customer checkpoint today"
+  },
+  {
+    "id": "globex-export-timeout",
+    "domain": "software",
+    "pattern": "customer_commitment_intervention",
+    "account": "Globex",
+    "account_id": "globex-001",
+    "claim": "Export timeout escalation",
+    "urgency": "Escalation thread is already in close-out"
+  },
+  {
+    "id": "initech-europe-expansion",
+    "domain": "software",
+    "pattern": "customer_commitment_intervention",
+    "account": "Initech",
+    "account_id": "initech-001",
+    "claim": "Europe expansion at risk",
+    "urgency": "No dated milestone"
+  }
+]

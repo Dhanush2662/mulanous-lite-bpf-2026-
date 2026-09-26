@@ -3,7 +3,42 @@
     "id": "MEETING-301",
     "account_id": "acme-001",
     "title": "Acme weekly check-in",
-    "text": "Customer confirmed the export timeout is resolved. SSO mapping remains open.",
+    "text": "A separate export question was closed last week. The SSO role-mapping blocker remains open and unresolved. The customer still expects the committed rollout.",
     "observed_at": "2026-09-25T16:00:00Z"
+  },
+  {
+    "id": "MEETING-302",
+    "account_id": "acme-001",
+    "title": "Delivery standup",
+    "text": "The delivery owner raised the Acme SSO blocker in standup. There is no resolution. The team will confirm the unresolved SAML mapping before today's customer checkpoint.",
+    "observed_at": "2026-09-25T17:00:00Z"
+  },
+  {
+    "id": "MEETING-410",
+    "account_id": "globex-001",
+    "title": "Globex export review",
+    "text": "The customer said the export timeout is resolved and they do not need an escalation. Verification with the customer is complete.",
+    "observed_at": "2026-09-24T10:00:00Z"
+  },
+  {
+    "id": "MEETING-411",
+    "account_id": "globex-001",
+    "title": "Internal close-out",
+    "text": "Delivery agreed the export timeout is already resolved. Do not reopen it and do not start a new intervention.",
+    "observed_at": "2026-09-24T13:20:00Z"
+  },
+  {
+    "id": "MEETING-510",
+    "account_id": "initech-001",
+    "title": "Initech renewal chat",
+    "text": "Europe expansion came up as a possibility. There was no decision, no date, and no delivery obstacle was identified. A follow-up was not scheduled.",
+    "observed_at": "2026-09-23T14:00:00Z"
+  },
+  {
+    "id": "MEETING-511",
+    "account_id": "initech-001",
+    "title": "Internal recap",
+    "text": "The notes do not show whether Europe expansion is a real delivery commitment. They lack a milestone, an owner, and a target date. The claim is insufficient until those exist.",
+    "observed_at": "2026-09-23T15:10:00Z"
   }
 ]
