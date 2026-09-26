@@ -3,7 +3,42 @@
     "id": "SLACK-201",
     "account_id": "acme-001",
     "title": "Acme rollout update",
-    "text": "Acme SSO is still blocked on SAML mapping. Platform team is investigating.",
+    "text": "Acme SSO is still blocked on SAML mapping. The platform team is investigating. The customer checkpoint is today.",
     "observed_at": "2026-09-25T13:30:00Z"
+  },
+  {
+    "id": "SLACK-202",
+    "account_id": "acme-001",
+    "title": "Escalation from customer success",
+    "text": "The Acme champion asked for a same-day update on the SSO rollout. The SSO blocker is still blocked and unresolved ahead of the checkpoint.",
+    "observed_at": "2026-09-25T14:05:00Z"
+  },
+  {
+    "id": "SLACK-310",
+    "account_id": "globex-001",
+    "title": "Globex export thread",
+    "text": "The Globex export timeout is resolved. The customer confirmed the 23 September export succeeded. This thread can stay closed.",
+    "observed_at": "2026-09-23T16:10:00Z"
+  },
+  {
+    "id": "SLACK-311",
+    "account_id": "globex-001",
+    "title": "Closing the export escalation",
+    "text": "No further action on the Globex export timeout. Do not reopen the incident. The customer is satisfied and the escalation is closed.",
+    "observed_at": "2026-09-24T08:40:00Z"
+  },
+  {
+    "id": "SLACK-410",
+    "account_id": "initech-001",
+    "title": "Europe aside",
+    "text": "Someone said Initech might expand in Europe next year. No details were shared and no follow-up was booked.",
+    "observed_at": "2026-09-22T17:45:00Z"
+  },
+  {
+    "id": "SLACK-411",
+    "account_id": "initech-001",
+    "title": "Unclear Europe ask",
+    "text": "The Europe expansion comment was a possibility only. No decision was made and no owner was named.",
+    "observed_at": null
   }
 ]

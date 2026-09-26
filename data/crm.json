@@ -2,9 +2,49 @@
   {
     "id": "CRM-001",
     "account_id": "acme-001",
-    "account_name": "Acme Systems",
-    "title": "Q3 account risk note",
-    "text": "SSO rollout remains at risk while SAML role mapping is unresolved.",
+    "account_name": "Acme",
+    "title": "Q3 SSO commitment at risk",
+    "text": "Acme committed to complete the SSO rollout before the September security review. The commitment is at risk while SAML role mapping is unresolved. No waiver has been recorded.",
     "observed_at": "2026-09-24T09:00:00Z"
+  },
+  {
+    "id": "CRM-002",
+    "account_id": "acme-001",
+    "account_name": "Acme",
+    "title": "Customer checkpoint still expects SSO",
+    "text": "Customer success confirmed the SSO rollout commitment is still due for today's customer checkpoint. The SAML mapping blocker is unresolved.",
+    "observed_at": "2026-09-25T08:00:00Z"
+  },
+  {
+    "id": "CRM-110",
+    "account_id": "globex-001",
+    "account_name": "Globex",
+    "title": "Export timeout follow-up closed",
+    "text": "Globex raised an export timeout last week. The customer confirmed exports now complete within the agreed window. The issue is resolved and the escalation is closed.",
+    "observed_at": "2026-09-24T09:30:00Z"
+  },
+  {
+    "id": "CRM-111",
+    "account_id": "globex-001",
+    "account_name": "Globex",
+    "title": "Account health after the export fix",
+    "text": "Nightly exports are completing for Globex. The timeout incident is resolved. No further action was requested by the customer.",
+    "observed_at": "2026-09-24T12:00:00Z"
+  },
+  {
+    "id": "CRM-210",
+    "account_id": "initech-001",
+    "account_name": "Initech",
+    "title": "Renewal conversation mentioned Europe",
+    "text": "Initech mentioned a possible Europe expansion during renewal. There is no signed commitment, no target date, and no owner for the idea.",
+    "observed_at": "2026-09-22T15:00:00Z"
+  },
+  {
+    "id": "CRM-211",
+    "account_id": "initech-001",
+    "account_name": "Initech",
+    "title": "EU workspace note",
+    "text": "The account team is exploring options for a Europe workspace. There is no scope and no milestone. Nothing is scheduled.",
+    "observed_at": "2026-09-23T11:00:00Z"
   }
 ]
