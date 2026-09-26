@@ -107,14 +107,18 @@ All important model output must conform to a defined schema.
 
 Every surfaced claim must reference actual input evidence.
 
-Evidence objects must preserve:
-- source
-- source record ID
-- timestamp where available
-- relevant text/value
-- provenance
+Evidence objects are flat records:
 
-If cited evidence cannot be resolved to an actual input record, reject that evidence.
+- `id` (`{source}:{source_record_id}`)
+- `source`
+- `source_record_id`
+- `title`
+- `body`
+- `observed_at`
+
+Those fields are the provenance. Do not nest a provenance object.
+
+If cited evidence cannot be resolved to an actual input record, reject that evidence. Every `evidence_id` on a challenge result must match an evidence `id` in the same response.
 
 ---
 
@@ -140,25 +144,15 @@ Primary API:
 
 POST /api/analyze
 
-Frontend must consume structured API responses.
+```json
+{ "case_id": "acme-sso-rollout" }
+```
+
+The frozen schema is [`docs/api-contract.md`](docs/api-contract.md). Frontend must consume that structured response.
 
 Do not make frontend components depend directly on LLM-specific response structures.
 
-Expected conceptual output:
-
-{
-  "decision": "VERIFY | SUPPRESS | ABSTAIN",
-  "title": "...",
-  "summary": "...",
-  "priority": "...",
-  "evidence": [],
-  "contradictions": [],
-  "owner": "...",
-  "recommended_action": "...",
-  "confidence": 0.0
-}
-
-The final schema may evolve, but changes must be coordinated between frontend and backend.
+The response carries `decision`, `reason`, `recommended_action`, `suggested_owner`, `due_hint`, flat `evidence` records, `contradictions_checked` (`hypothesis`, `result`, `evidence_ids`), and `missing_evidence`. It has no confidence field and no risk score. Decisions are validated pipeline output for the selected case, not canned payloads.
 
 ---
 

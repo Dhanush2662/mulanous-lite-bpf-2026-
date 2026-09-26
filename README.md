@@ -4,7 +4,16 @@ Mulanous Lite helps an enterprise account team decide whether a reported account
 
 **User:** Delivery / Operations Manager.
 
-**Product freeze:** [PRODUCT_SPEC](docs/PRODUCT_SPEC.md) is the authoritative surface for BPF Day 1. **Solution:** select a case and call `POST /api/analyze` with `case_id`. The service returns one validated decision: `VERIFY`, `SUPPRESS`, or `ABSTAIN`, with reason, recommended action, suggested owner, due hint, evidence (body and provenance), contradictions checked, and missing evidence. See [API contract](docs/api-contract.md).
+**Product freeze:** [PRODUCT_SPEC](docs/PRODUCT_SPEC.md) is the authoritative surface for BPF Day 1.
+
+```text
+Attention Today
+→ Case Brief
+→ embedded Evidence Inspector
+→ optional P1 Investigate drawer
+```
+
+**Solution:** select a case and call `POST /api/analyze` with `{ "case_id": "acme-sso-rollout" }`. The service returns one validated decision: `VERIFY`, `SUPPRESS`, or `ABSTAIN`, with reason, recommended action, suggested owner, due hint, flat evidence records, `contradictions_checked` challenge results, and missing evidence. See [API contract](docs/api-contract.md).
 
 **Architecture:** a small frontend calls one backend endpoint. The backend reads four local synthetic JSON datasets for the selected case and produces an explainable decision. See [architecture](docs/architecture.md), [API contract](docs/api-contract.md), and [demo flow](docs/demo-flow.md).
 

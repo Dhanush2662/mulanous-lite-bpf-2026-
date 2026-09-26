@@ -500,10 +500,10 @@ Evidence must be visually inspectable.
 Each evidence item should include:
 
 - source
-- record identifier
-- relevant fact
-- timestamp
-- status / confidence if relevant
+- source record id
+- title
+- body
+- observed at
 
 Do not hide provenance behind tooltips only.
 
