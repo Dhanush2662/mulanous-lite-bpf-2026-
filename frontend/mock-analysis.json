@@ -1,0 +1,28 @@
+{
+  "case_id": "acme-sso-rollout",
+  "account": "Acme",
+  "claim": "SSO rollout blocked",
+  "decision": "VERIFY",
+  "reason": "Open delivery evidence still shows an unresolved SAML mapping blocker.",
+  "recommended_action": "Confirm the unresolved SAML mapping blocker with the delivery owner.",
+  "suggested_owner": "Delivery owner",
+  "due_hint": "Before today's customer checkpoint",
+  "evidence": [
+    {
+      "id": "jira:JIRA-101",
+      "source": "jira",
+      "source_record_id": "JIRA-101",
+      "title": "SSO rollout blocked by SAML mapping",
+      "body": "The customer cannot complete SSO rollout until role mapping is corrected.",
+      "observed_at": "2026-09-25T10:00:00Z"
+    }
+  ],
+  "contradictions_checked": [
+    {
+      "hypothesis": "The SSO rollout blocker is already resolved.",
+      "result": "not_supported",
+      "evidence_ids": ["jira:JIRA-101"]
+    }
+  ],
+  "missing_evidence": []
+}

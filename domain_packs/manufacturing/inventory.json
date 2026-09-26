@@ -1,0 +1,15 @@
+[
+  {
+    "id": "ORION-MAT-441",
+    "account_id": "orion-001",
+    "title": "Housing alloy shortage",
+    "text": "Inventory for the Monday commitment of 5,000 units. On-hand quantity is 1200. Required quantity is 5000. Status is short. Housing alloy material shortage is unresolved. The production planner cannot complete the order.",
+    "observed_at": "2026-09-25T11:30:00Z",
+    "facts": {
+      "on_hand_qty": "1200",
+      "required_qty": "5000",
+      "status": "short",
+      "material": "housing alloy"
+    }
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "JIRA-101",
+    "account_id": "acme-001",
+    "title": "SSO rollout blocked by SAML mapping",
+    "text": "Status is open. The customer cannot complete the SSO rollout until role mapping is corrected. This blocker stops the committed rollout.",
+    "status": "open",
+    "observed_at": "2026-09-25T10:00:00Z"
+  },
+  {
+    "id": "JIRA-103",
+    "account_id": "acme-001",
+    "title": "SSO group-to-role mapping has not shipped",
+    "text": "Status is open. The SSO group-to-role mapping fix has not shipped. The blocker remains open and there is no resolution.",
+    "status": "open",
+    "observed_at": "2026-09-25T11:15:00Z"
+  },
+  {
+    "id": "JIRA-210",
+    "account_id": "globex-001",
+    "title": "Export timeout on large CSV",
+    "text": "Status is resolved. The export timeout was corrected in release 4.2 and verified with the customer on 23 September 2026.",
+    "status": "resolved",
+    "observed_at": "2026-09-23T15:00:00Z"
+  },
+  {
+    "id": "JIRA-211",
+    "account_id": "globex-001",
+    "title": "Customer sign-off on the export window",
+    "text": "Status is done. The customer signed off that the nightly export completes. The timeout incident is resolved.",
+    "status": "done",
+    "observed_at": "2026-09-23T18:00:00Z"
+  },
+  {
+    "id": "JIRA-310",
+    "account_id": "initech-001",
+    "title": "Europe expansion idea",
+    "text": "Captured from a sales conversation about Europe expansion. The item is unscheduled. There are no acceptance criteria and no customer commitment date.",
+    "status": "backlog",
+    "observed_at": "2026-09-22T16:30:00Z"
+  }
+]

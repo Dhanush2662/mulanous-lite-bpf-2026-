@@ -1,0 +1,15 @@
+[
+  {
+    "id": "ORION-PO-5000",
+    "account_id": "orion-001",
+    "title": "Committed order ORION-PO-5000",
+    "text": "Committed order for Orion Components: 5,000 units due Monday. Order quantity is 5000. Commitment date is Monday. Status is open. Production planner owns the order. The commitment is unresolved.",
+    "observed_at": "2026-09-25T09:00:00Z",
+    "facts": {
+      "order_qty": "5000",
+      "commitment_date": "Monday",
+      "status": "open",
+      "owner": "Production planner"
+    }
+  }
+]
