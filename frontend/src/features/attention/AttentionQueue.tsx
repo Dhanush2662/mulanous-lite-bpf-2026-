@@ -25,15 +25,11 @@ export function AttentionQueue({ cases }: { cases: Case[] }) {
             {group.items.map((item, index) => {
               const sources = domainSources(item.domain)
               const lead = group.domain === "software" && index === 0
+              const quiet = !lead && (group.domain === "software" || item.queue_status === "dismissed")
               return (
                 <li
                   key={item.id}
-                  className={[
-                    lead ? "is-lead" : "",
-                    item.queue_status === "dismissed" ? "is-quiet" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
+                  className={[lead ? "is-lead" : "", quiet ? "is-quiet" : ""].filter(Boolean).join(" ")}
                 >
                   <div className="queue-copy">
                     <p className="account">{item.account}</p>

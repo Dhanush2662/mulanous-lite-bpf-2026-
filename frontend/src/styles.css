@@ -97,6 +97,9 @@ a {
 
 .demo-mark {
   margin: 0;
+  border: 1px solid var(--gold);
+  border-radius: 2px;
+  padding: 4px 8px;
   color: var(--gold);
   font-size: 11px;
   white-space: nowrap;
@@ -143,38 +146,21 @@ h1 {
 }
 
 .systems ul {
-  display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   margin: 12px 0 0;
   padding: 0;
   list-style: none;
-  border: 1px solid var(--border);
-  background: var(--surface);
 }
 
 .systems li {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  border-right: 1px solid var(--border);
-  padding: 14px 6px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.systems li:last-child {
-  border-right: 0;
-}
-
-.system-icon {
-  width: 22px;
-  height: 22px;
-  fill: none;
-  stroke: var(--gold);
-  stroke-width: 1.4;
-  stroke-linecap: square;
-  stroke-linejoin: miter;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--surface);
+  padding: 6px 10px;
+  color: var(--text);
+  font-size: 13px;
 }
 
 .queue {
@@ -281,11 +267,17 @@ h1 {
 .approve-button,
 .text-button {
   border: 1px solid var(--border);
+  border-radius: 2px;
   background: transparent;
   padding: 8px 14px;
   font-family: var(--mono);
   font-size: 12px;
   letter-spacing: 0.12em;
+}
+
+.open-button {
+  border-color: var(--gold);
+  color: var(--gold);
 }
 
 .open-button:hover,
@@ -391,137 +383,6 @@ h1 {
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 16px;
-}
-
-.section-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.text-link {
-  color: var(--gold);
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-}
-
-.evidence-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  padding: 18px 32px;
-}
-
-.evidence-top a {
-  color: var(--gold);
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.14em;
-}
-
-.crumbs {
-  margin: 0 0 18px;
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-}
-
-.crumbs a {
-  color: var(--text);
-}
-
-.evidence-case {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
-  gap: 28px;
-  align-items: start;
-}
-
-.evidence-title {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.evidence-title h1 {
-  font-size: 28px;
-}
-
-.disposition {
-  margin: 4px 0 0;
-  border: 1px solid var(--border);
-  padding: 4px 8px;
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.12em;
-}
-
-.disposition.verify {
-  border-color: var(--gold);
-  color: var(--gold);
-}
-
-.meta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 28px;
-  margin: 22px 0 0;
-}
-
-.meta-row dt,
-.evidence-case h2 {
-  margin: 0;
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.14em;
-}
-
-.meta-row dd,
-.evidence-case section p {
-  margin: 6px 0 0;
-}
-
-.evidence-case section {
-  margin-top: 28px;
-}
-
-.note-source {
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.note-list {
-  margin: 12px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.note-list li {
-  border-top: 1px solid var(--border);
-  padding: 12px 0;
-}
-
-.note-list button {
-  display: flex;
-  width: 100%;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  text-align: left;
-}
-
-.note-list button.is-selected .mono {
-  color: var(--gold);
 }
 
 .evidence-table td.summary {
@@ -840,6 +701,10 @@ h1 {
   color: var(--gold);
 }
 
+.step-no {
+  margin-right: 8px;
+}
+
 .plan-steps dl {
   margin: 8px 0 0;
 }
@@ -969,24 +834,9 @@ h1 {
     align-items: flex-start;
   }
 
-  .systems ul {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .systems li:nth-child(4) {
-    border-right: 0;
-  }
-
   .brief-layout,
-  .evidence-case,
   .action-block dl {
     grid-template-columns: 1fr;
-  }
-
-  .evidence-top,
-  .evidence-title {
-    align-items: flex-start;
-    flex-direction: column;
   }
 
   .drawer {

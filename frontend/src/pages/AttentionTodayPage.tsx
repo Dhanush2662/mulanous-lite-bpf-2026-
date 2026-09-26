@@ -1,5 +1,4 @@
 import { AppHeader } from "../components/AppHeader"
-import { SystemIcon } from "../components/SystemIcon"
 import { FallbackNote } from "../components/FallbackNote"
 import { AttentionQueue } from "../features/attention/AttentionQueue"
 import { CONNECTED_SYSTEMS } from "../features/labels"
@@ -20,10 +19,7 @@ export function AttentionTodayPage() {
           <h2>CONNECTED SYSTEMS</h2>
           <ul>
             {CONNECTED_SYSTEMS.map((name) => (
-              <li key={name}>
-                <SystemIcon name={name} />
-                <span>{name}</span>
-              </li>
+              <li key={name}>{name}</li>
             ))}
           </ul>
         </section>

@@ -131,9 +131,12 @@ export function TakeActionDrawer({
           />
           <p className="mono plan-id">{plan.plan_id}</p>
           <ol className="plan-steps">
-            {plan.steps.map((step) => (
+            {plan.steps.map((step, index) => (
               <li key={`${step.tool}-${step.summary}`}>
-                <p className="tool">{step.tool}</p>
+                <p className="tool">
+                  <span className="step-no">{String(index + 1).padStart(2, "0")}</span>
+                  {step.tool}
+                </p>
                 <p>{step.summary}</p>
                 <dl>
                   {Object.entries(step.args).map(([key, value]) => (

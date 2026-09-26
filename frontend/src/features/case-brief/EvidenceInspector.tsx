@@ -4,7 +4,7 @@ import type { EvidenceRecord } from "../../types/api"
 export function EvidenceInspector({ record }: { record: EvidenceRecord | null }) {
   return (
     <aside className="inspector" aria-label="Evidence">
-      <h2>EVIDENCE</h2>
+      <h2>EVIDENCE INSPECTOR</h2>
       {record ? (
         <dl className="evidence-fields">
           <div>
