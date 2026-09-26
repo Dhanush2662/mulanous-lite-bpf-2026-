@@ -147,28 +147,28 @@ def prepare_store(
         from app.evidence.atlas import AtlasEvidenceStore
 
         atlas = AtlasEvidenceStore.from_env()
+        existing = atlas.all_evidence()
+        if not existing:
+            _ensure_embeddings(records, embedder)
+            atlas.upsert(records, cases)
+            logger.info("evidence_store name=atlas reason=seeded records=%s", len(records))
+            return PreparedStore(atlas, records, cases, "atlas_seeded")
+        stored_cases = atlas.load_cases()
+        if not stored_cases:
+            logger.error("evidence_store state=cases_missing_using_files")
+            stored_cases = cases
+        if embedder is not None:
+            for item in attach_missing_embeddings(existing, embedder):
+                if item.embedding:
+                    atlas.save_embedding(item.record.id, item.embedding)
+        logger.info("evidence_store name=atlas reason=existing records=%s", len(existing))
+        return PreparedStore(atlas, existing, stored_cases, "atlas_existing")
     except Exception as exc:
         logger.error(
             "evidence_store name=memory reason=atlas_unavailable error_type=%s",
             type(exc).__name__,
         )
         return _memory_store(records, cases, embedder, "atlas_unavailable")
-    existing = atlas.all_evidence()
-    if not existing:
-        _ensure_embeddings(records, embedder)
-        atlas.upsert(records, cases)
-        logger.info("evidence_store name=atlas reason=seeded records=%s", len(records))
-        return PreparedStore(atlas, records, cases, "atlas_seeded")
-    stored_cases = atlas.load_cases()
-    if not stored_cases:
-        logger.error("evidence_store state=cases_missing_using_files")
-        stored_cases = cases
-    if embedder is not None:
-        for item in attach_missing_embeddings(existing, embedder):
-            if item.embedding:
-                atlas.save_embedding(item.record.id, item.embedding)
-    logger.info("evidence_store name=atlas reason=existing records=%s", len(existing))
-    return PreparedStore(atlas, existing, stored_cases, "atlas_existing")
 
 
 def _memory_store(

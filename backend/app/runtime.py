@@ -10,7 +10,7 @@ from app.actions.planner import build_action_plan
 from app.adapters.sources import load_workspace
 from app.context.assembler import filter_evidence, hybrid_retrieve
 from app.errors import AppError
-from app.evidence.embeddings import build_embedder
+from app.evidence.embeddings import FakeEmbedder, build_embedder
 from app.evidence.normalize import build_case_records, normalize_evidence
 from app.evidence.store import EvidenceStore, prepare_store
 from app.investigate.answer import answer_question
@@ -52,6 +52,14 @@ class Runtime:
             use_atlas=use_atlas,
         )
         self.store: EvidenceStore = prepared.store
+        self._fallback_store: EvidenceStore = self.store
+        self._fallback_embedder = self.embedder
+        if self.store.name == "atlas":
+            self._fallback_embedder = FakeEmbedder(self.embedder.dimensions)
+            fixture_copy = [item.model_copy(deep=True) for item in evidence]
+            self._fallback_store = prepare_store(
+                fixture_copy, loaded.cases, self._fallback_embedder, use_atlas=False
+            ).store
         self._cases = {
             case.id: case for case in build_case_records(prepared.cases, prepared.evidence)
         }
@@ -90,7 +98,11 @@ class Runtime:
         return filter_evidence(assembled, source, query)
 
     def get_evidence(self, evidence_id: str) -> EvidenceRecord:
-        found = self.store.get(evidence_id)
+        try:
+            found = self.store.get(evidence_id)
+        except Exception as exc:
+            logger.error("evidence_read state=fallback error_type=%s", type(exc).__name__)
+            found = self._fallback_store.get(evidence_id)
         if found is None:
             raise AppError(404, "Unknown evidence")
         return found.record
@@ -165,13 +177,23 @@ class Runtime:
         )
 
     def _assemble(self, case: CaseRecord) -> list[EvidenceRecord]:
-        return hybrid_retrieve(
-            self.store,
-            account_id=case.account_id,
-            domain=case.domain,
-            claim=case.claim,
-            embedder=self.embedder,
-        )
+        try:
+            return hybrid_retrieve(
+                self.store,
+                account_id=case.account_id,
+                domain=case.domain,
+                claim=case.claim,
+                embedder=self.embedder,
+            )
+        except Exception as exc:
+            logger.error("evidence_retrieval state=fallback error_type=%s", type(exc).__name__)
+            return hybrid_retrieve(
+                self._fallback_store,
+                account_id=case.account_id,
+                domain=case.domain,
+                claim=case.claim,
+                embedder=self._fallback_embedder,
+            )
 
     def _apply_low_risk(self, plan: ActionPlan) -> None:
         result = apply_stored_plan(plan, self._session)

@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 
 from app.actions.policy import requires_approval
+from app.errors import AppError
 from app.schemas.models import ActionPlan, ActionStep, AnalyzeResponse, Case, SyntheticState
 
 
@@ -119,11 +120,11 @@ def _order_id(analysis: AnalyzeResponse) -> str:
     for record in analysis.evidence:
         if record.source == "erp":
             return record.source_record_id
-    return "unknown-order"
+    raise AppError(400, "Manufacturing action requires order evidence")
 
 
 def _material(analysis: AnalyzeResponse) -> str:
     for record in analysis.evidence:
         if record.source == "inventory":
             return record.title[:120]
-    return "short material"
+    raise AppError(400, "Manufacturing action requires inventory evidence")

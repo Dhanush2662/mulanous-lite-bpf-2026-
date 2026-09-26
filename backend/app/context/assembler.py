@@ -23,12 +23,16 @@ def hybrid_retrieve(
     not_before: str | None = None,
 ) -> list[EvidenceRecord]:
     structured = store.find_structured(account_id, domain, not_before=not_before)
-    semantic = store.search_semantic(
-        account_id,
-        domain,
-        embedder.embed(claim),
-        SEMANTIC_LIMIT,
-    )
+    try:
+        semantic = store.search_semantic(
+            account_id,
+            domain,
+            embedder.embed(claim),
+            SEMANTIC_LIMIT,
+        )
+    except Exception as exc:
+        logger.error("semantic_retrieval state=unavailable error_type=%s", type(exc).__name__)
+        semantic = []
     merged = _dedupe(structured + semantic)[:EVIDENCE_CAP]
     logger.info(
         "hybrid_retrieve account_id=%s domain=%s structured=%s semantic=%s context_size=%s",
