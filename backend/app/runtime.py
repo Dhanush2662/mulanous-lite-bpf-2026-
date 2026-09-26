@@ -10,9 +10,9 @@ from app.actions.planner import build_action_plan
 from app.adapters.sources import load_workspace
 from app.context.assembler import filter_evidence, hybrid_retrieve
 from app.errors import AppError
-from app.evidence.embeddings import attach_embeddings, build_embedder
-from app.evidence.normalize import build_cases, normalize_evidence
-from app.evidence.store import EvidenceStore, open_evidence_store
+from app.evidence.embeddings import build_embedder
+from app.evidence.normalize import build_case_records, normalize_evidence
+from app.evidence.store import EvidenceStore, prepare_store
 from app.investigate.answer import answer_question
 from app.logging_config import get_logger
 from app.reasoning.decision_agent import DecisionAgent
@@ -45,9 +45,16 @@ class Runtime:
         loaded = load_workspace(data_dir, pack_dirs)
         evidence = normalize_evidence(loaded)
         self.embedder = build_embedder(force_fake=force_fake_embeddings)
-        attach_embeddings(evidence, self.embedder)
-        self.store: EvidenceStore = open_evidence_store(evidence, loaded.cases, use_atlas=use_atlas)
-        self._cases = {case.id: case for case in build_cases(loaded, evidence)}
+        prepared = prepare_store(
+            evidence,
+            loaded.cases,
+            self.embedder,
+            use_atlas=use_atlas,
+        )
+        self.store: EvidenceStore = prepared.store
+        self._cases = {
+            case.id: case for case in build_case_records(prepared.cases, prepared.evidence)
+        }
         self._order = list(self._cases)
         self._agent = DecisionAgent(provider)
         self._session = SyntheticSession()

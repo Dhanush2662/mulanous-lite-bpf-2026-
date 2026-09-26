@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import os
 
+from pydantic import ValidationError
+
 from app.adapters.sources import CaseSeed
 from app.evidence.embeddings import rank_by_cosine
 from app.logging_config import get_logger
@@ -94,6 +96,20 @@ class AtlasEvidenceStore:
     def all_evidence(self) -> list[StoredEvidence]:
         return [_stored(document) for document in self._evidence.find({})]
 
+    def load_cases(self) -> list[CaseSeed]:
+        documents = list(self._cases.find({}))
+        documents.sort(key=_case_order)
+        cases: list[CaseSeed] = []
+        for document in documents:
+            try:
+                cases.append(CaseSeed.model_validate(document))
+            except ValidationError:
+                logger.error("evidence_store state=skipped_case")
+        return cases
+
+    def save_embedding(self, evidence_id: str, embedding: list[float]) -> None:
+        self._evidence.update_one({"id": evidence_id}, {"$set": {"embedding": embedding}})
+
     def save_action(self, action: dict[str, object]) -> None:
         plan_id = str(action.get("plan_id", ""))
         self._actions.replace_one({"plan_id": plan_id}, action, upsert=True)
@@ -117,6 +133,15 @@ class AtlasEvidenceStore:
             }
         ]
         return [_stored(document) for document in self._evidence.aggregate(pipeline)]
+
+
+def _case_order(document: dict[str, object]) -> tuple[int, str]:
+    raw = document.get("ingest_order", 1_000_000)
+    try:
+        order = int(raw)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        order = 1_000_000
+    return order, str(document.get("id", ""))
 
 
 def _document(item: StoredEvidence) -> dict[str, object]:

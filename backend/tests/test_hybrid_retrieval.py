@@ -5,9 +5,11 @@ from __future__ import annotations
 import logging
 
 import pytest
+from app.adapters.sources import CaseSeed
 from app.context.assembler import hybrid_retrieve
 from app.evidence.embeddings import FakeEmbedder
-from app.evidence.store import MemoryEvidenceStore, open_evidence_store
+from app.evidence.normalize import build_case_records
+from app.evidence.store import MemoryEvidenceStore, open_evidence_store, prepare_store
 from app.schemas.models import EvidenceRecord, StoredEvidence
 
 SECRET_URI = "mongodb+srv://user:super-secret-password@cluster.example/db"
@@ -122,10 +124,137 @@ def test_time_filter_keeps_exact_rows_and_drops_null_timestamps() -> None:
     }
 
 
+def test_existing_atlas_documents_win_over_file_fixtures(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    pymongo = pytest.importorskip("pymongo")
+    monkeypatch.setattr(pymongo, "MongoClient", _FakeClient)
+    database = _FakeDatabase()
+    database["cases"].docs.append(
+        {
+            "id": "orion-order-5000",
+            "domain": "manufacturing",
+            "pattern": "production_commitment_intervention",
+            "account": "Orion Components",
+            "account_id": "orion-001",
+            "claim": "5,000 units due Monday",
+            "urgency": "Due Monday",
+            "ingest_order": 1,
+        }
+    )
+    database["evidence"].docs.extend(
+        [
+            {
+                "id": "inventory:ORION-MAT-441",
+                "source": "inventory",
+                "source_record_id": "ORION-MAT-441",
+                "account_id": "orion-001",
+                "domain": "manufacturing",
+                "title": "Housing alloy shortage",
+                "body": "On-hand quantity is 1200. Status is short.",
+                "observed_at": "2026-09-25T11:30:00Z",
+                "retrieval_class": "structured",
+                "facts": {"on_hand_qty": "1200", "status": "short"},
+                "embedding": None,
+            },
+            {
+                "id": "quality:FROM-GO",
+                "source": "quality",
+                "source_record_id": "FROM-GO",
+                "account_id": "orion-001",
+                "domain": "manufacturing",
+                "title": "Quality hold",
+                "body": "Quality hold remains open for the units due Monday.",
+                "observed_at": "2026-09-25T13:00:00Z",
+                "retrieval_class": "semantic",
+                "facts": {},
+                "embedding": None,
+            },
+        ]
+    )
+    _FakeClient.preset = database
+    monkeypatch.setenv("MONGODB_URI", "mongodb://127.0.0.1:27017")
+    file_only = _row(
+        "crm:FILE-ONLY",
+        "crm",
+        "FILE-ONLY",
+        "File fixture",
+        "This body must not replace Atlas.",
+        account_id="acme-001",
+        domain="software",
+    )
+    file_case = CaseSeed(
+        id="acme-sso-rollout",
+        domain="software",
+        pattern="customer_commitment_intervention",
+        account="Acme",
+        account_id="acme-001",
+        claim="SSO rollout blocked",
+        urgency="Customer checkpoint today",
+    )
+    try:
+        prepared = prepare_store([file_only], [file_case], FakeEmbedder(), use_atlas=None)
+    finally:
+        _FakeClient.preset = None
+    assert prepared.origin == "atlas_existing"
+    assert prepared.store.name == "atlas"
+    ids = {item.record.id for item in prepared.evidence}
+    assert ids == {"inventory:ORION-MAT-441", "quality:FROM-GO"}
+    assert "crm:FILE-ONLY" not in ids
+    inventory = next(item for item in prepared.evidence if item.record.source == "inventory")
+    assert inventory.embedding is None
+    assert inventory.facts["on_hand_qty"] == "1200"
+    note = next(item for item in prepared.evidence if item.record.id == "quality:FROM-GO")
+    assert note.embedding is not None
+    assert len(note.embedding) == 64
+    stored_note = database["evidence"].find_one({"id": "quality:FROM-GO"})
+    assert stored_note is not None
+    assert stored_note["embedding"] == note.embedding
+    cases = build_case_records(prepared.cases, prepared.evidence)
+    assert [case.id for case in cases] == ["orion-order-5000"]
+    assert cases[0].domain == "manufacturing"
+    assert cases[0].source_count == 2
+
+
+def test_empty_atlas_is_seeded_from_file_fixtures(monkeypatch: pytest.MonkeyPatch) -> None:
+    pymongo = pytest.importorskip("pymongo")
+    monkeypatch.setattr(pymongo, "MongoClient", _FakeClient)
+    _FakeClient.preset = _FakeDatabase()
+    monkeypatch.setenv("MONGODB_URI", "mongodb://127.0.0.1:27017")
+    record = _row(
+        "jira:JIRA-101",
+        "jira",
+        "JIRA-101",
+        "SSO blocker",
+        "The SSO rollout remains open.",
+        account_id="acme-001",
+        domain="software",
+    )
+    case = CaseSeed(
+        id="acme-sso-rollout",
+        domain="software",
+        pattern="customer_commitment_intervention",
+        account="Acme",
+        account_id="acme-001",
+        claim="SSO rollout blocked",
+        urgency="Customer checkpoint today",
+    )
+    try:
+        prepared = prepare_store([record], [case], FakeEmbedder(), use_atlas=None)
+    finally:
+        _FakeClient.preset = None
+    assert prepared.origin == "atlas_seeded"
+    assert [item.record.id for item in prepared.evidence] == ["jira:JIRA-101"]
+    assert prepared.store.get("jira:JIRA-101") is not None
+
+
 def test_memory_store_is_used_when_atlas_is_disabled(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("MONGODB_URI", SECRET_URI)
     store = open_evidence_store([], [], use_atlas=False)
     assert store.name == "memory"
+    prepared = prepare_store([], [], FakeEmbedder(), use_atlas=False)
+    assert prepared.origin == "memory"
+    assert prepared.store.name == "memory"
 
 
 def test_atlas_outage_falls_back_without_logging_the_uri(
@@ -141,6 +270,9 @@ def test_atlas_outage_falls_back_without_logging_the_uri(
     with caplog.at_level(logging.DEBUG):
         store = open_evidence_store([], [], use_atlas=None)
     assert store.name == "memory"
+    prepared = prepare_store([], [], FakeEmbedder(), use_atlas=None)
+    assert prepared.origin == "memory"
+    assert prepared.store.name == "memory"
     assert SECRET_URI not in caplog.text
     assert "super-secret-password" not in caplog.text
 
@@ -259,6 +391,15 @@ class _FakeCollection:
     def __init__(self) -> None:
         self.docs: list[dict[str, object]] = []
 
+    def update_one(self, filt: dict[str, object], update: dict[str, object], upsert: bool = False) -> None:
+        del upsert
+        sets = update.get("$set", {})
+        key = next(iter(filt))
+        for doc in self.docs:
+            if doc.get(key) == filt[key] and isinstance(sets, dict):
+                doc.update(sets)
+                return
+
     def replace_one(self, filt: dict[str, object], doc: dict[str, object], upsert: bool = False) -> None:
         key = next(iter(filt))
         for index, existing in enumerate(self.docs):
@@ -293,10 +434,12 @@ class _FakeDatabase:
 
 
 class _FakeClient:
+    preset: _FakeDatabase | None = None
+
     def __init__(self, uri: str, **kwargs: object) -> None:
         del uri, kwargs
         self.admin = _Admin()
-        self._database = _FakeDatabase()
+        self._database = self.preset if self.preset is not None else _FakeDatabase()
 
     def __getitem__(self, name: str) -> _FakeDatabase:
         del name

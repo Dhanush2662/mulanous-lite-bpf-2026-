@@ -3,10 +3,17 @@
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from typing import Protocol
 
 from app.adapters.sources import CaseSeed
-from app.evidence.embeddings import rank_by_cosine
+from app.evidence.embeddings import (
+    FakeEmbedder,
+    OpenAIEmbedder,
+    attach_embeddings,
+    attach_missing_embeddings,
+    rank_by_cosine,
+)
 from app.logging_config import get_logger
 from app.schemas.models import StoredEvidence
 
@@ -107,31 +114,83 @@ class MemoryEvidenceStore:
         self.actions.append(action)
 
 
+@dataclass
+class PreparedStore:
+    """Working set for one process. Atlas rows win when the collection already has evidence."""
+
+    store: EvidenceStore
+    evidence: list[StoredEvidence]
+    cases: list[CaseSeed]
+    origin: str
+
+
 def open_evidence_store(
     records: list[StoredEvidence],
     cases: list[CaseSeed],
     *,
     use_atlas: bool | None = None,
 ) -> EvidenceStore:
-    memory = MemoryEvidenceStore()
-    memory.upsert(records, cases)
+    return prepare_store(records, cases, use_atlas=use_atlas).store
+
+
+def prepare_store(
+    records: list[StoredEvidence],
+    cases: list[CaseSeed],
+    embedder: FakeEmbedder | OpenAIEmbedder | None = None,
+    *,
+    use_atlas: bool | None = None,
+) -> PreparedStore:
     if use_atlas is False or not os.environ.get("MONGODB_URI", "").strip():
         reason = "disabled" if use_atlas is False else "no_uri"
-        logger.info("evidence_store name=memory reason=%s records=%s", reason, len(records))
-        return memory
+        return _memory_store(records, cases, embedder, reason)
     try:
         from app.evidence.atlas import AtlasEvidenceStore
 
         atlas = AtlasEvidenceStore.from_env()
-        atlas.upsert(records, cases)
     except Exception as exc:
         logger.error(
             "evidence_store name=memory reason=atlas_unavailable error_type=%s",
             type(exc).__name__,
         )
-        return memory
-    logger.info("evidence_store name=atlas records=%s", len(records))
-    return atlas
+        return _memory_store(records, cases, embedder, "atlas_unavailable")
+    existing = atlas.all_evidence()
+    if not existing:
+        _ensure_embeddings(records, embedder)
+        atlas.upsert(records, cases)
+        logger.info("evidence_store name=atlas reason=seeded records=%s", len(records))
+        return PreparedStore(atlas, records, cases, "atlas_seeded")
+    stored_cases = atlas.load_cases()
+    if not stored_cases:
+        logger.error("evidence_store state=cases_missing_using_files")
+        stored_cases = cases
+    if embedder is not None:
+        for item in attach_missing_embeddings(existing, embedder):
+            if item.embedding:
+                atlas.save_embedding(item.record.id, item.embedding)
+    logger.info("evidence_store name=atlas reason=existing records=%s", len(existing))
+    return PreparedStore(atlas, existing, stored_cases, "atlas_existing")
+
+
+def _memory_store(
+    records: list[StoredEvidence],
+    cases: list[CaseSeed],
+    embedder: FakeEmbedder | OpenAIEmbedder | None,
+    reason: str,
+) -> PreparedStore:
+    _ensure_embeddings(records, embedder)
+    memory = MemoryEvidenceStore()
+    memory.upsert(records, cases)
+    logger.info("evidence_store name=memory reason=%s records=%s", reason, len(records))
+    return PreparedStore(memory, records, cases, "memory")
+
+
+def _ensure_embeddings(
+    records: list[StoredEvidence],
+    embedder: FakeEmbedder | OpenAIEmbedder | None,
+) -> None:
+    if embedder is None:
+        return
+    attach_embeddings(records, embedder)
 
 
 def _source_ok(item: StoredEvidence, source: str | None) -> bool:

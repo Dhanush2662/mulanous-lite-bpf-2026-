@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.adapters.sources import LoadedWorkspace
+from app.adapters.sources import CaseSeed, LoadedWorkspace
 from app.evidence.retrieval import retrieval_class_for
 from app.evidence.timestamps import is_utc_timestamp
 from app.logging_config import get_logger
@@ -48,11 +48,15 @@ def normalize_evidence(loaded: LoadedWorkspace) -> list[StoredEvidence]:
 
 
 def build_cases(loaded: LoadedWorkspace, evidence: list[StoredEvidence]) -> list[CaseRecord]:
+    return build_case_records(loaded.cases, evidence)
+
+
+def build_case_records(seeds: list[CaseSeed], evidence: list[StoredEvidence]) -> list[CaseRecord]:
     counts: dict[str, int] = {}
     for item in evidence:
         counts[item.account_id] = counts.get(item.account_id, 0) + 1
     cases: list[CaseRecord] = []
-    for seed in loaded.cases:
+    for seed in seeds:
         cases.append(
             CaseRecord(
                 id=seed.id,

@@ -40,7 +40,15 @@ A clean restart clears synthetic tasks, messages, manufacturing expedites, and q
 
 Copy [`.env.example`](../.env.example) to `.env` in the repo root or `backend/.env`. Set `MONGODB_URI`. Do not commit the URI. Optional: `MONGODB_DB` (default `mulanous_lite`) and `ATLAS_VECTOR_INDEX` (default `evidence_vector`).
 
-On startup the process pings Atlas and upserts cases, evidence, and later action records into the `cases`, `evidence`, and `actions` collections. If the ping fails, it logs the error type and keeps serving from the in-memory fixtures. The URI is never logged.
+Load the fixtures with the Go ingest worker first. From the repository root:
+
+```bash
+make ingest
+```
+
+That upserts `cases` and `evidence`. `embedding` is left null. See [ingest/README.md](../ingest/README.md). If `MONGODB_URI` is missing, ingest exits with an error and does not start an in-memory store.
+
+On startup the Python process pings Atlas. When `evidence` already has rows, it reads those documents and fills any missing semantic embeddings. It does not overwrite that collection from the fixture files. When the collection is empty, it seeds `cases` and `evidence` from the files. If the ping fails, it logs the error type and keeps serving from the in-memory fixtures. The URI is never logged. Action records are still written to `actions` by the API.
 
 Create a vector search index named `evidence_vector` on `evidence.embedding` before the demo if you want Atlas Vector Search itself. Dimensions are 64 and similarity is cosine. Filter fields are `account_id`, `domain`, and `retrieval_class`. If that index is missing, semantic retrieval falls back to the same cosine ranking inside the account and domain filter. Exact facts never use that ranking.
 
@@ -107,7 +115,8 @@ Execute applies the stored plan only. The client cannot swap tools or arguments 
 
 ```text
 app/adapters/     load data/*.json and domain_packs/*; a bad file drops that source only
-app/evidence/     normalize, hybrid store, embeddings, optional Atlas client
+app/evidence/     normalize, hybrid store, embeddings, Atlas read (Go ingest is the writer)
+../ingest/        Go CLI that upserts the same case and evidence documents
 app/context/      structured filters plus semantic rank, dedupe, cap of 12
 app/reasoning/    prompt decision-v2, deterministic reader, optional OpenAI call
 app/validation/   schema and grounding checks

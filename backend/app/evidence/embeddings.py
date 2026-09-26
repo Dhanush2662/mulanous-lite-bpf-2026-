@@ -96,16 +96,35 @@ def attach_embeddings(records: list[StoredEvidence], embedder: FakeEmbedder | Op
         if item.retrieval_class != "semantic":
             item.embedding = None
             continue
-        text = f"{item.record.title}\n{item.record.body}"
-        try:
-            item.embedding = embedder.embed(text)
-        except Exception as exc:
-            logger.error(
-                "embedder state=skipped id=%s error_type=%s",
-                item.record.id,
-                type(exc).__name__,
-            )
-            item.embedding = FakeEmbedder(embedder.dimensions).embed(text)
+        item.embedding = _embed_text(item, embedder)
+
+
+def attach_missing_embeddings(
+    records: list[StoredEvidence],
+    embedder: FakeEmbedder | OpenAIEmbedder,
+) -> list[StoredEvidence]:
+    """Fill semantic rows that Go ingest stored without a vector."""
+
+    filled: list[StoredEvidence] = []
+    for item in records:
+        if item.retrieval_class != "semantic" or item.embedding:
+            continue
+        item.embedding = _embed_text(item, embedder)
+        filled.append(item)
+    return filled
+
+
+def _embed_text(item: StoredEvidence, embedder: FakeEmbedder | OpenAIEmbedder) -> list[float]:
+    text = f"{item.record.title}\n{item.record.body}"
+    try:
+        return embedder.embed(text)
+    except Exception as exc:
+        logger.error(
+            "embedder state=skipped id=%s error_type=%s",
+            item.record.id,
+            type(exc).__name__,
+        )
+        return FakeEmbedder(embedder.dimensions).embed(text)
 
 
 def cosine(left: list[float], right: list[float]) -> float:
