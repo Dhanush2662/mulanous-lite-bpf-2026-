@@ -1,27 +1,49 @@
-import { challengeLabel, sourceLabel } from "../labels"
-import type { AnalyzeResponse, EvidenceRecord } from "../../types/api"
+import { SourceChips } from "../../components/SourceChips"
+import { challengeLabel, domainSources, formatObserved, sourceLabel } from "../labels"
+import type { AnalyzeResponse, Domain, EvidenceRecord } from "../../types/api"
 
 export function CaseBriefView({
   analysis,
+  domain,
+  selectedId,
   onInspect,
   onPlan,
 }: {
   analysis: AnalyzeResponse
+  domain: Domain
+  selectedId: string | null
   onInspect: (record: EvidenceRecord) => void
   onPlan: () => void
 }) {
   const tone = analysis.decision.toLowerCase()
+  const contradiction = contradictionLine(analysis)
 
   return (
     <div className="brief">
-      <header className="brief-head">
-        <h1>{analysis.account}</h1>
-        <p>{analysis.claim}</p>
+      <p className="case-kicker">Case Brief</p>
+      <header className="case-identity">
+        <p>
+          {analysis.account}
+          {" · "}
+          {analysis.claim}
+          {" · "}
+          <span className="mono">{analysis.case_id}</span>
+        </p>
+        <div className="case-identity-side">
+          <SourceChips names={domainSources(domain)} />
+          <p className="demo-mark">SYNTHETIC DEMO</p>
+        </div>
       </header>
 
       <section className={`hero ${tone}`}>
         <h2>{analysis.decision}</h2>
+        <p className="decision-title">{analysis.recommended_action}</p>
         <p>{analysis.reason}</p>
+      </section>
+
+      <section className="challenge-block">
+        <h3>CONTRADICTIONS CHECKED</h3>
+        <p className="contradiction-line">{contradiction}</p>
       </section>
 
       <section className="action-block">
@@ -53,8 +75,9 @@ export function CaseBriefView({
             <thead>
               <tr>
                 <th>SOURCE</th>
-                <th>RECORD ID</th>
                 <th>TITLE</th>
+                <th>SUMMARY</th>
+                <th>OBSERVED AT</th>
               </tr>
             </thead>
             <tbody>
@@ -62,6 +85,7 @@ export function CaseBriefView({
                 <tr
                   key={record.id}
                   tabIndex={0}
+                  className={record.id === selectedId ? "is-selected" : ""}
                   onClick={() => onInspect(record)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
@@ -71,29 +95,13 @@ export function CaseBriefView({
                   }}
                 >
                   <td>{sourceLabel(record.source)}</td>
-                  <td className="mono">{record.source_record_id}</td>
                   <td>{record.title}</td>
+                  <td className="summary">{record.body}</td>
+                  <td className="mono">{formatObserved(record.observed_at)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        )}
-      </section>
-
-      <section className="challenge-block">
-        <h3>CONTRADICTIONS CHECKED</h3>
-        {analysis.contradictions_checked.length === 0 ? (
-          <p className="status-copy">No contradictions were checked for this decision.</p>
-        ) : (
-          <ul>
-            {analysis.contradictions_checked.map((item) => (
-              <li key={`${item.result}-${item.hypothesis}`}>
-                <p className="mono">{challengeLabel(item.result)}</p>
-                <p>{item.hypothesis}</p>
-                <p className="mono evidence-ids">{item.evidence_ids.join(" · ")}</p>
-              </li>
-            ))}
-          </ul>
         )}
       </section>
 
@@ -109,4 +117,13 @@ export function CaseBriefView({
       ) : null}
     </div>
   )
+}
+
+function contradictionLine(analysis: AnalyzeResponse): string {
+  if (analysis.contradictions_checked.length === 0) {
+    return "No contradictions were checked for this decision."
+  }
+  return analysis.contradictions_checked
+    .map((item) => `${item.hypothesis} ${challengeLabel(item.result)}`)
+    .join(" · ")
 }

@@ -1,4 +1,5 @@
 import { AppHeader } from "../components/AppHeader"
+import { SystemIcon } from "../components/SystemIcon"
 import { FallbackNote } from "../components/FallbackNote"
 import { AttentionQueue } from "../features/attention/AttentionQueue"
 import { CONNECTED_SYSTEMS } from "../features/labels"
@@ -11,13 +12,18 @@ export function AttentionTodayPage() {
     <>
       <AppHeader />
       <main className="page">
-        <h1>What needs my attention today?</h1>
-        <p className="lede">Operational cases across software and manufacturing.</p>
+        <div className="attention-head">
+          <h1>What needs my attention today?</h1>
+          <p className="demo-mark">SYNTHETIC DEMO</p>
+        </div>
         <section className="systems">
           <h2>CONNECTED SYSTEMS</h2>
           <ul>
             {CONNECTED_SYSTEMS.map((name) => (
-              <li key={name}>{name}</li>
+              <li key={name}>
+                <SystemIcon name={name} />
+                <span>{name}</span>
+              </li>
             ))}
           </ul>
         </section>

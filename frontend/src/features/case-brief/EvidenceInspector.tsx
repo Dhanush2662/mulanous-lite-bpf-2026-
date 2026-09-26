@@ -1,42 +1,36 @@
-import { Drawer } from "../../components/Drawer"
-import { sourceLabel } from "../labels"
+import { formatObserved, sourceLabel } from "../labels"
 import type { EvidenceRecord } from "../../types/api"
 
-export function EvidenceInspector({
-  record,
-  onClose,
-}: {
-  record: EvidenceRecord | null
-  onClose: () => void
-}) {
-  if (!record) {
-    return null
-  }
-
+export function EvidenceInspector({ record }: { record: EvidenceRecord | null }) {
   return (
-    <Drawer title="EVIDENCE" onClose={onClose}>
-      <dl className="evidence-fields">
-        <div>
-          <dt>SOURCE</dt>
-          <dd>{sourceLabel(record.source)}</dd>
-        </div>
-        <div>
-          <dt>RECORD ID</dt>
-          <dd className="mono">{record.source_record_id}</dd>
-        </div>
-        <div>
-          <dt>TITLE</dt>
-          <dd>{record.title}</dd>
-        </div>
-        <div>
-          <dt>BODY</dt>
-          <dd>{record.body}</dd>
-        </div>
-        <div>
-          <dt>OBSERVED AT</dt>
-          <dd className="mono">{record.observed_at ?? "No timestamp"}</dd>
-        </div>
-      </dl>
-    </Drawer>
+    <aside className="inspector" aria-label="Evidence">
+      <h2>EVIDENCE</h2>
+      {record ? (
+        <dl className="evidence-fields">
+          <div>
+            <dt>SOURCE</dt>
+            <dd>{sourceLabel(record.source)}</dd>
+          </div>
+          <div>
+            <dt>RECORD ID</dt>
+            <dd className="mono">{record.source_record_id}</dd>
+          </div>
+          <div>
+            <dt>TITLE</dt>
+            <dd>{record.title}</dd>
+          </div>
+          <div>
+            <dt>BODY</dt>
+            <dd>{record.body}</dd>
+          </div>
+          <div>
+            <dt>OBSERVED AT</dt>
+            <dd className="mono">{formatObserved(record.observed_at)}</dd>
+          </div>
+        </dl>
+      ) : (
+        <p className="status-copy">Select an evidence row.</p>
+      )}
+    </aside>
   )
 }

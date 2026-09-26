@@ -20,13 +20,15 @@ export function CaseBriefPage() {
 
   const account = analysisState.analysis?.account ?? preview?.account ?? ""
   const claim = analysisState.analysis?.claim ?? preview?.claim ?? ""
+  const evidence = analysisState.analysis?.evidence ?? []
+  const selected = evidence.find((record) => record.id === inspected?.id) ?? evidence[0] ?? null
 
   return (
     <>
       <AppHeader />
       <main className="page">
         <Link to="/" className="back-link">
-          Attention Today
+          Back to Attention Today
         </Link>
 
         {analysisState.phase === "progress" ? (
@@ -54,22 +56,19 @@ export function CaseBriefPage() {
               source={analysisState.source}
               text="Local fallback. The decision service did not return this analysis."
             />
-            <CaseBriefView
-              analysis={analysisState.analysis}
-              onInspect={(record) => {
-                setPlanning(false)
-                setInspected(record)
-              }}
-              onPlan={() => {
-                setInspected(null)
-                setPlanning(true)
-              }}
-            />
+            <div className="brief-layout">
+              <CaseBriefView
+                analysis={analysisState.analysis}
+                domain={analysisState.domain}
+                selectedId={selected?.id ?? null}
+                onInspect={setInspected}
+                onPlan={() => setPlanning(true)}
+              />
+              <EvidenceInspector record={selected} />
+            </div>
           </>
         ) : null}
       </main>
-
-      <EvidenceInspector record={inspected} onClose={() => setInspected(null)} />
       {planning ? (
         <TakeActionDrawer caseId={caseId} onClose={() => setPlanning(false)} />
       ) : null}
